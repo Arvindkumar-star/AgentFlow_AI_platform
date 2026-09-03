@@ -29,18 +29,33 @@ class DiscordIntegration extends BaseIntegration {
   }
 
   async execute(action, params, credentials) {
-    const botToken = env.DISCORD_BOT_TOKEN || credentials?.accessToken;
-    if (!botToken) {
-      throw Object.assign(new Error('Discord INTEGRATION_NOT_CONNECTED'), { code: 'INTEGRATION_NOT_CONNECTED' });
+    const webhookUrl = params.webhookUrl || credentials?.webhookUrl;
+    const botToken = credentials?.botToken || credentials?.accessToken || env.DISCORD_BOT_TOKEN;
+
+    if (webhookUrl) {
+      const response = await axios.post(
+        webhookUrl,
+        { content: params.message || 'Hello from Agentflow_AI!' },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      return { success: true, via: 'webhook', status: response.status };
     }
 
-    if (action === 'postMessage') {
+    if (!botToken) {
+      throw Object.assign(new Error('Discord is not configured. Please supply a Bot Token or Webhook URL in Integrations.'), { code: 'INTEGRATION_NOT_CONNECTED' });
+    }
+
+    if (action === 'postMessage' || !action) {
+      const channelId = params.channelId || credentials?.channelId;
+      if (!channelId) {
+        throw new Error('Discord channelId is required when using Bot Token.');
+      }
       const response = await axios.post(
-        `https://discord.com/api/v10/channels/${params.channelId}/messages`,
+        `https://discord.com/api/v10/channels/${channelId}/messages`,
         { content: params.message || 'Hello from Agentflow_AI!' },
-        { headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bot ${botToken.trim()}`, 'Content-Type': 'application/json' } }
       );
-      return { messageId: response.data.id, channelId: response.data.channel_id };
+      return { messageId: response.data.id, channelId: response.data.channel_id, success: true };
     }
 
     throw new Error(`Discord action "${action}" not supported`);

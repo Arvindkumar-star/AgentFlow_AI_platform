@@ -32,22 +32,33 @@ class SlackIntegration extends BaseIntegration {
   }
 
   async execute(action, params, credentials) {
-    if (!credentials?.accessToken) {
-      throw Object.assign(new Error('Slack INTEGRATION_NOT_CONNECTED'), { code: 'INTEGRATION_NOT_CONNECTED' });
-    }
-    const client = new WebClient(credentials.accessToken);
+    const webhookUrl = params.webhookUrl || credentials?.webhookUrl;
+    const token = credentials?.botToken || credentials?.accessToken || env.SLACK_BOT_TOKEN;
 
-    if (action === 'postMessage') {
-      const result = await client.chat.postMessage({
-        channel: params.channel || '#general',
+    if (webhookUrl) {
+      const resp = await axios.post(webhookUrl, {
         text: params.message || params.text || 'Hello from Agentflow_AI!',
       });
-      return { ts: result.ts, channel: result.channel, ok: result.ok };
+      return { success: true, via: 'incoming-webhook', status: resp.status };
+    }
+
+    if (!token) {
+      throw Object.assign(new Error('Slack is not connected. Please provide an Incoming Webhook URL or Bot Token in Integrations.'), { code: 'INTEGRATION_NOT_CONNECTED' });
+    }
+
+    const client = new WebClient(token);
+
+    if (action === 'postMessage' || !action) {
+      const result = await client.chat.postMessage({
+        channel: params.channel || params.channelId || '#general',
+        text: params.message || params.text || 'Hello from Agentflow_AI!',
+      });
+      return { ts: result.ts, channel: result.channel, ok: result.ok, success: true };
     }
 
     if (action === 'listChannels') {
       const result = await client.conversations.list({ limit: 100 });
-      return { channels: result.channels };
+      return { channels: result.channels, success: true };
     }
 
     throw new Error(`Slack action "${action}" not supported`);

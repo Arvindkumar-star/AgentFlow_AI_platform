@@ -4,17 +4,21 @@ const ic = require('../controllers/integrationController');
 
 const router = express.Router();
 
-// Public — tells frontend which OAuth providers are configured
+// Public / Config
 router.get('/config', ic.getConfig);
 
-// OAuth callbacks don't have Bearer token — they come from the browser redirect
+// Status & List
 router.get('/status', protect, ic.getStatus);
 router.get('/', protect, ic.listIntegrations);
-router.post('/', protect, ic.saveCredential);
+
+// BYOK Endpoints
+router.post('/:provider/byok', protect, ic.saveBYOK);
+router.delete('/:provider/byok', protect, ic.deleteBYOK);
+router.post('/:provider/test', protect, ic.testConnection);
 
 // OAuth flows
 router.get('/oauth/:provider/start', protect, ic.oauthStart);
-router.get('/oauth/:provider/callback', ic.oauthCallback); // No protect — browser redirect
+router.get('/oauth/:provider/callback', ic.oauthCallback); // Browser redirect
 router.get('/oauth/error', ic.oauthError);
 
 module.exports = router;

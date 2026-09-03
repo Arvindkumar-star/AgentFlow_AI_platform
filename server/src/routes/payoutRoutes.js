@@ -235,176 +235,32 @@ router.post('/reject', async (req, res) => {
   }
 });
 
-// POST /api/payouts/parse-invoice — Automated AI invoice document parsing
+// POST /api/payouts/parse-invoice — AI OCR Invoice Parsing powered by Google Gemini (gemini-2.5-flash)
 router.post('/parse-invoice', async (req, res) => {
-  const startTime = Date.now();
   try {
-    const { fileName, fileType, fileBase64, textContent, sampleType } = req.body;
+    const { fileName, fileType, fileBase64, textContent, sampleType, userId } = req.body;
+    const { parseInvoiceDocument } = require('../services/ocrService');
 
-    let extractedData = null;
-    const env = require('../config/env');
-
-    // 1. Try OpenRouter (GPT-4o / GPT-4o-mini Vision)
-    if (env.OPENROUTER_API_KEY && (fileBase64 || textContent || fileName)) {
-      try {
-        const OpenAI = require('openai');
-        const client = new OpenAI({
-          baseURL: 'https://openrouter.ai/api/v1',
-          apiKey: env.OPENROUTER_API_KEY,
-        });
-
-        const messages = [
-          {
-            role: 'system',
-            content: `You are an expert AI Invoice Extraction Engine. Extract key invoice parameters and return ONLY valid JSON matching this schema:
-{
-  "recipientName": "string",
-  "paymentDetails": "string",
-  "amount": number,
-  "invoiceNumber": "string",
-  "memo": "string"
-}`
-          }
-        ];
-
-        if (fileBase64 && (fileType?.startsWith('image/') || fileType === 'application/pdf')) {
-          const mime = fileType === 'application/pdf' ? 'application/pdf' : (fileType || 'image/png');
-          messages.push({
-            role: 'user',
-            content: [
-              { type: 'text', text: `Extract the payment details from this invoice: ${fileName || 'invoice'}` },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: fileBase64.startsWith('data:') ? fileBase64 : `data:${mime};base64,${fileBase64}`
-                }
-              }
-            ]
-          });
-        } else {
-          messages.push({
-            role: 'user',
-            content: `Extract payment parameters from this invoice:
-Filename: ${fileName || 'invoice.pdf'}
-Content: ${textContent || fileName || 'AWS Cloud Services invoice'}`
-          });
-        }
-
-        const completion = await client.chat.completions.create({
-          model: 'openai/gpt-4o-mini',
-          messages,
-          temperature: 0.1,
-        });
-
-        const responseText = completion.choices[0]?.message?.content || '';
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          extractedData = JSON.parse(jsonMatch[0]);
-        }
-      } catch (llmErr) {
-        console.warn('OpenRouter invoice parsing warning:', llmErr.message);
-      }
-    }
-
-    // 2. Try Gemini if OpenRouter didn't parse
-    if (!extractedData && env.GEMINI_API_KEY && (fileBase64 || textContent || fileName)) {
-      try {
-        const { GoogleGenerativeAI } = require('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-        const prompt = `You are an AI Invoice Parser. Return ONLY valid JSON:
-{
-  "recipientName": "string",
-  "paymentDetails": "string",
-  "amount": number,
-  "invoiceNumber": "string",
-  "memo": "string"
-}
-Extract from: Filename: ${fileName || ''}, Content: ${textContent || fileName || 'AWS Invoice'}`;
-
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          extractedData = JSON.parse(jsonMatch[0]);
-        }
-      } catch (gemErr) {
-        console.warn('Gemini invoice parsing warning:', gemErr.message);
-      }
-    }
-
-    // 3. Deterministic Smart Fallback Pattern Engine
-    if (!extractedData) {
-      const lowerName = (fileName || textContent || sampleType || '').toLowerCase();
-
-      if (lowerName.includes('aws') || lowerName.includes('amazon')) {
-        extractedData = {
-          recipientName: 'Amazon Web Services India Pvt Ltd',
-          paymentDetails: 'aws.billing@okhdfcbank',
-          amount: 4200,
-          invoiceNumber: `INV-AWS-${Date.now().toString().slice(-4)}`,
-          memo: 'Monthly EC2 Compute & S3 Storage Cloud Infrastructure'
-        };
-      } else if (lowerName.includes('cloudflare') || lowerName.includes('cdn')) {
-        extractedData = {
-          recipientName: 'Cloudflare Enterprise Network',
-          paymentDetails: 'cloudflare@razorpay',
-          amount: 6800,
-          invoiceNumber: `INV-CF-${Date.now().toString().slice(-4)}`,
-          memo: 'DDoS Protection & Global Edge CDN Bandwidth'
-        };
-      } else if (lowerName.includes('github') || lowerName.includes('git')) {
-        extractedData = {
-          recipientName: 'GitHub Enterprise Services',
-          paymentDetails: 'github.inc@icici',
-          amount: 3500,
-          invoiceNumber: `INV-GH-${Date.now().toString().slice(-4)}`,
-          memo: 'Enterprise Copilot & Actions Compute Tier'
-        };
-      } else if (lowerName.includes('scam') || lowerName.includes('tampered') || lowerName.includes('attack') || lowerName.includes('shell')) {
-        extractedData = {
-          recipientName: 'Unknown Shell Corp Ltd',
-          paymentDetails: '99887766554433',
-          amount: 45000,
-          invoiceNumber: 'SCAM-INV-999',
-          memo: 'Unauthorized Budget Escalation Test (Exceeds ZK Limit)'
-        };
-      } else {
-        const amountMatch = (textContent || fileName || '').match(/(?:₹|rs\.?|inr|\$)?\s*([\d,]+(?:\.\d{2})?)/i);
-        const invMatch = (textContent || fileName || '').match(/(?:inv|bill|ref)[-_#]?\s*([a-z0-9-]+)/i);
-        
-        extractedData = {
-          recipientName: fileName ? fileName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') : 'Acme Technologies',
-          paymentDetails: 'acme.billing@razorpay',
-          amount: amountMatch ? Number(amountMatch[1].replace(/,/g, '')) : 5400,
-          invoiceNumber: invMatch ? invMatch[1].toUpperCase() : `INV-${Date.now().toString().slice(-6)}`,
-          memo: 'Vendor Invoice Settlement'
-        };
-      }
-    }
-
-    const finalPayload = {
-      recipientName: String(extractedData.recipientName || 'Direct Vendor').trim(),
-      paymentDetails: String(extractedData.paymentDetails || 'vendor@upi').trim(),
-      amount: Number(extractedData.amount) || 4200,
-      invoiceNumber: String(extractedData.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`).trim(),
-      memo: String(extractedData.memo || 'Invoice Payout').trim(),
-      latencyMs: Date.now() - startTime,
-      modelUsed: env.OPENROUTER_API_KEY ? 'gpt-4o-vision' : (env.GEMINI_API_KEY ? 'gemini-1.5-flash' : 'deterministic-parser')
-    };
+    const result = await parseInvoiceDocument({
+      fileName,
+      fileType,
+      fileBase64,
+      textContent,
+      sampleType,
+      userId: userId || req.user?._id,
+    });
 
     return res.status(200).json({
       success: true,
-      data: finalPayload,
-      message: 'Invoice parsed successfully by AI engine.'
+      data: result,
+      message: 'Invoice parsed successfully by Google Gemini Vision Engine.',
     });
   } catch (err) {
     console.error('Invoice parsing error:', err);
     return res.status(500).json({
       success: false,
       error: err.message || 'Failed to parse invoice',
-      code: 'INVOICE_PARSE_ERROR'
+      code: 'INVOICE_PARSE_ERROR',
     });
   }
 });

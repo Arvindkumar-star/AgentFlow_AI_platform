@@ -9,18 +9,45 @@ const IntegrationSchema = new mongoose.Schema(
     },
     provider: {
       type: String,
-      enum: ['gmail', 'slack', 'google-sheets', 'discord', 'openrouter', 'gemini'],
       required: true,
+    },
+    authType: {
+      type: String,
+      enum: ['oauth2', 'api_key', 'webhook', 'bot_token', 'service_account', 'manual'],
+      default: 'manual',
+    },
+    isBYOK: {
+      type: Boolean,
+      default: false,
+    },
+    status: {
+      type: String,
+      enum: ['active', 'invalid', 'disconnected', 'pending'],
+      default: 'active',
     },
     isConnected: {
       type: Boolean,
       default: false,
     },
+    // Encrypted JSON data holding flexible custom fields (e.g., botToken, webhookUrl, apiKey, secret)
+    encryptedData: {
+      type: String,
+      default: null,
+    },
+    // Safe masked string displayed on frontend (e.g. sk-proj••••••••4f21)
+    maskedIdentifier: {
+      type: String,
+      default: null,
+    },
+    lastTestedAt: {
+      type: Date,
+      default: null,
+    },
     scopes: [{ type: String }],
-    // All token values stored encrypted — NEVER store plaintext here
-    encryptedAccessToken: { type: String },
-    encryptedRefreshToken: { type: String },
-    expiresAt: { type: Date },
+    // OAuth token fields
+    encryptedAccessToken: { type: String, default: null },
+    encryptedRefreshToken: { type: String, default: null },
+    expiresAt: { type: Date, default: null },
     metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
