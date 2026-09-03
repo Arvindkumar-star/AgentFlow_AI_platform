@@ -4,8 +4,8 @@
   "private": true,
   "description": "Agentflow_AI Platform Monorepo",
   "scripts": {
-    "build": "cd client && npm install && npm run build",
-    "start": "cd client && npm start",
+    "build": "node -e \"const fs=require('fs'), cp=require('child_process'); if(fs.existsSync('./client')){cp.execSync('cd client && npm run build', {stdio:'inherit'})} else {cp.execSync('next build', {stdio:'inherit'})}\"",
+    "start": "node -e \"const fs=require('fs'), cp=require('child_process'); if(fs.existsSync('./client')){cp.execSync('cd client && npm start', {stdio:'inherit'})} else {cp.execSync('next start', {stdio:'inherit'})}\"",
     "client": "cd client && npm run dev",
     "server": "cd server && npm run dev"
   }
