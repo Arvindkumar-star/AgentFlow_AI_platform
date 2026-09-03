@@ -27,4 +27,15 @@ async function getMe(req, res, next) {
   }
 }
 
-module.exports = { register, login, getMe };
+async function googleAuth(req, res, next) {
+  try {
+    const result = await authService.googleAuth(req.body);
+    res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, getMe, googleAuth };
+
+

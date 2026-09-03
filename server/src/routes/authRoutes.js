@@ -38,6 +38,9 @@ router.post(
   authController.login
 );
 
+// POST /api/auth/google
+router.post('/google', authLimiter, authController.googleAuth);
+
 // GET /api/auth/me
 router.get('/me', protect, authController.getMe);
 

@@ -12,7 +12,12 @@ export const useAuthStore = create(persist((set) => ({
   },
   register: async (details) => {
     const { data } = await api.post('/auth/register', details);
-    set({ token: data.token, user: data.user });
+    set({ token: data.token, user: data.user, hydrated: true });
+    return data;
+  },
+  googleLogin: async (details) => {
+    const { data } = await api.post('/auth/google', details || {});
+    set({ token: data.token, user: data.user, hydrated: true });
     return data;
   },
   loadProfile: async () => {

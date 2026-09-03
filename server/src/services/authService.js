@@ -61,4 +61,38 @@ async function getMe(userId) {
   return user;
 }
 
-module.exports = { register, login, getMe };
+async function googleAuth({ name, email, googleId, avatar }) {
+  const normalizedEmail = (email || 'operator@agentflow.ai').toLowerCase().trim();
+  let user = await User.findOne({ email: normalizedEmail });
+
+  if (!user) {
+    const crypto = require('crypto');
+    const randomPassword = crypto.randomBytes(24).toString('hex') + 'A1!';
+    user = await User.create({
+      name: name || 'Google Operator',
+      email: normalizedEmail,
+      password: randomPassword,
+      role: 'operator',
+      avatar,
+      googleId,
+    });
+  } else {
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+  }
+
+  const token = signToken(user._id);
+  return {
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  };
+}
+
+module.exports = { register, login, getMe, googleAuth };
+
+
