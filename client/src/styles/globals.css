@@ -1,0 +1,274 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Google Font ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ─── CSS Design Tokens ───────────────────────────────────────── */
+:root {
+  --bg-base:       #f1f5f9;
+  --bg-panel:      #ffffff;
+  --bg-panel-muted:#f8fafc;
+  --border:        #e2e8f0;
+  --text-primary:  #0f172a;
+  --text-muted:    #475569;
+  --text-faint:    #94a3b8;
+  --accent:        #0284c7;
+  --accent-light:  #38bdf8;
+  --accent-bg:     rgba(2,132,199,.08);
+  --shadow:        0 4px 20px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+  --grid-line:     rgba(2,132,199,.05);
+  color-scheme: light;
+}
+
+.dark {
+  --bg-base:       #0b0f17;
+  --bg-panel:      #111827;
+  --bg-panel-muted:#1e293b;
+  --border:        #1e293b;
+  --text-primary:  #f8fafc;
+  --text-muted:    #94a3b8;
+  --text-faint:    #475569;
+  --accent:        #38bdf8;
+  --accent-light:  #7dd3fc;
+  --accent-bg:     rgba(56,189,248,.12);
+  --shadow:        0 4px 32px rgba(0,0,0,.5), 0 1px 4px rgba(0,0,0,.3);
+  --grid-line:     rgba(56,189,248,.05);
+  color-scheme: dark;
+}
+
+/* Custom Glassmorphism Utility */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Glowing Border Effects */
+.glow-emerald {
+  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.3);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.3);
+}
+
+.glow-rose {
+  box-shadow: 0 0 25px -2px rgba(244, 63, 94, 0.4);
+}
+
+/* Flow Line Animation */
+@keyframes dashdraw {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.animated-edge-path {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.8s linear infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, #38bdf8 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .gradient-text {
+  background: linear-gradient(135deg, #38bdf8 0%, #7dd3fc 40%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-emerald {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Interactive Card Glow Effect */
+.card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 12px 30px -10px rgba(56, 189, 248, 0.15), var(--shadow);
+}
+
+.dark .card-hover:hover {
+  box-shadow: 0 12px 30px -10px rgba(56, 189, 248, 0.25), 0 0 20px -5px rgba(56, 189, 248, 0.1);
+}
+
+/* Terminal / Code Window */
+.terminal-window {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+.dark .terminal-window {
+  background: #090d16;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+/* ─── Base Reset ──────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, sans-serif;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ─── Responsive Layout Utility ──────────────────────────────── */
+.app-main {
+  margin-left: 0;
+}
+@media (min-width: 768px) {
+  .app-main {
+    margin-left: 256px;
+  }
+}
+
+/* Sidebar — hidden on mobile, block on md+ */
+.sidebar-desktop {
+  display: none;
+}
+@media (min-width: 768px) {
+  .sidebar-desktop {
+    display: block;
+  }
+}
+
+/* ─── Grid Background ─────────────────────────────────────────── */
+.grid-bg {
+  background-color: var(--bg-base);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ─── Reusable Components ─────────────────────────────────────── */
+@layer components {
+  /* Card */
+  .card {
+    @apply rounded-2xl transition-all duration-300;
+    background: var(--bg-panel);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .dark .card {
+    background: rgba(17, 24, 39, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .dark .card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+
+  /* Input */
+  .input {
+    @apply w-full rounded-xl px-4 py-3 text-sm outline-none transition;
+    background: var(--bg-panel-muted);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  .input::placeholder { color: var(--text-faint); }
+
+  /* Primary Button */
+  .button {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition;
+    background: var(--accent);
+    color: #0e1a30;
+  }
+  .button:hover { filter: brightness(1.1); }
+  .button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Secondary Button */
+  .button-secondary {
+    @apply inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    background: transparent;
+  }
+  .button-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Theme Toggle */
+  .theme-toggle {
+    @apply flex items-center justify-center rounded-xl transition;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    background: var(--bg-panel);
+  }
+  .theme-toggle:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+}
+
+/* ─── Global React Flow Node Resets ───────────────────────────── */
+.react-flow__node,
+.react-flow__node-default,
+.react-flow__node-input,
+.react-flow__node-output,
+.react-flow__node-group {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  width: auto !important;
+}
+
+.react-flow__controls-button {
+  background: var(--bg-panel) !important;
+  border-bottom: 1px solid var(--border) !important;
+  fill: var(--text-primary) !important;
+}
+.react-flow__controls-button svg {
+  fill: var(--text-primary) !important;
+}
+.react-flow__controls-button:hover {
+  background: var(--bg-panel-muted) !important;
+}
+
