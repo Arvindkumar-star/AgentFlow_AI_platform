@@ -47,31 +47,36 @@ export default function Register() {
         setGoogleBusy(false);
       }
     } else {
-      setTimeout(() => {
-        const googleUser = {
-          id: `usr_google_${Date.now().toString().slice(-6)}`,
-          _id: `usr_google_${Date.now().toString().slice(-6)}`,
-          name: form.name || 'Google Operator',
-          email: form.email || 'operator@agentflow.ai',
-          role: 'operator',
-        };
+      const googleUser = {
+        id: `usr_google_${Date.now().toString().slice(-6)}`,
+        _id: `usr_google_${Date.now().toString().slice(-6)}`,
+        name: form.name || 'Google Operator',
+        email: form.email || 'operator@agentflow.ai',
+        role: 'operator',
+      };
+      const googleToken = `jwt_google_oauth_${Date.now()}`;
 
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(
-            'agentflow-auth',
-            JSON.stringify({
-              state: {
-                token: `jwt_google_oauth_${Date.now()}`,
-                user: googleUser,
-                hydrated: true,
-              },
-              version: 0,
-            })
-          );
-        }
+      useAuthStore.setState({
+        token: googleToken,
+        user: googleUser,
+        hydrated: true,
+      });
 
-        router.replace('/dashboard');
-      }, 500);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          'agentflow-auth',
+          JSON.stringify({
+            state: {
+              token: googleToken,
+              user: googleUser,
+              hydrated: true,
+            },
+            version: 0,
+          })
+        );
+      }
+
+      router.push('/dashboard');
     }
   };
 
