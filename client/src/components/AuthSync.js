@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useAuthStore } from '../store/authStore';
 
 /**
  * AuthSync Component
  * Automatically synchronizes NextAuth Google OAuth sessions with our backend JWT authentication.
- * Ensures the client always holds a valid cryptographically signed backend JWT token.
+ * Ensures the client always holds a valid cryptographically signed backend JWT token and redirects to dashboard.
  */
 export default function AuthSync() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const { token, user, googleLogin } = useAuthStore();
   const syncingRef = useRef(false);
@@ -27,17 +29,25 @@ export default function AuthSync() {
               avatar: session.user.image,
               googleId: session.user.id,
             });
+            if (['/login', '/register', '/'].includes(router.pathname)) {
+              router.replace('/dashboard');
+            }
           } catch (err) {
             console.error('[AuthSync] Error synchronizing Google session with backend API:', err);
+            if (['/login', '/register', '/'].includes(router.pathname)) {
+              router.replace('/dashboard');
+            }
           } finally {
             syncingRef.current = false;
           }
+        } else if (['/login', '/register', '/'].includes(router.pathname)) {
+          router.replace('/dashboard');
         }
       }
     }
 
     syncSessionWithBackend();
-  }, [session, status, token, user, googleLogin]);
+  }, [session, status, token, user, googleLogin, router]);
 
   return null;
 }

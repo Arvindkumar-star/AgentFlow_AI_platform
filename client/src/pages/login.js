@@ -19,8 +19,27 @@ export default function Login() {
     // If already authenticated with valid JWT token, redirect to dashboard
     if (token && !token.startsWith('jwt_fallback_') && !token.startsWith('oauth_jwt_')) {
       router.replace('/dashboard');
+      return;
     }
-  }, [token, router]);
+
+    // If NextAuth session is active, sync with backend and redirect to dashboard
+    if (session?.user?.email) {
+      setGoogleBusy(true);
+      useAuthStore.getState().googleLogin({
+        name: session.user.name || 'Google Operator',
+        email: session.user.email,
+        avatar: session.user.image,
+        googleId: session.user.id,
+      }).then(() => {
+        router.replace('/dashboard');
+      }).catch((err) => {
+        console.error('Google session sync error:', err);
+        router.replace('/dashboard');
+      }).finally(() => {
+        setGoogleBusy(false);
+      });
+    }
+  }, [token, session, router]);
 
   const submit = async (e) => {
     e.preventDefault();

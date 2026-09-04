@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { AuthLayout } from './login';
 import { useAuthStore } from '../store/authStore';
 
 export default function Register() {
   const router = useRouter();
+  const { data: session } = useSession();
   const { register, token } = useAuthStore();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
@@ -16,8 +17,26 @@ export default function Register() {
   useEffect(() => {
     if (token && !token.startsWith('jwt_fallback_') && !token.startsWith('oauth_jwt_')) {
       router.replace('/dashboard');
+      return;
     }
-  }, [token, router]);
+
+    if (session?.user?.email) {
+      setGoogleBusy(true);
+      useAuthStore.getState().googleLogin({
+        name: session.user.name || 'Google Operator',
+        email: session.user.email,
+        avatar: session.user.image,
+        googleId: session.user.id,
+      }).then(() => {
+        router.replace('/dashboard');
+      }).catch((err) => {
+        console.error('Google session sync error:', err);
+        router.replace('/dashboard');
+      }).finally(() => {
+        setGoogleBusy(false);
+      });
+    }
+  }, [token, session, router]);
 
   const submit = async (e) => {
     e.preventDefault();

@@ -26,6 +26,13 @@ export const authOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Always redirect to /dashboard after successful Google OAuth sign-in
+      if (url.includes('/dashboard')) return url;
+      if (url.startsWith('/')) return `${baseUrl}/dashboard`;
+      if (new URL(url).origin === baseUrl) return `${baseUrl}/dashboard`;
+      return `${baseUrl}/dashboard`;
+    },
   },
   pages: {
     signIn: '/login',
