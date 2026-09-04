@@ -20,7 +20,7 @@ const PALETTE_GROUPS = [
     ],
   },
   {
-    label: 'Razorpay Payment & Email',
+    label: 'Razorpay Payment System',
     isPayment: true,
     items: [
       {
@@ -38,14 +38,6 @@ const PALETTE_GROUPS = [
         icon: '🔗',
         desc: 'Generate rzp.io payment link',
         badge: 'LINK',
-      },
-      {
-        type: 'email_notification',
-        label: 'Email Notification',
-        color: '#f97316',
-        icon: '📧',
-        desc: 'Dispatch payment links & emails',
-        badge: 'GUARDED',
       },
     ],
   },
