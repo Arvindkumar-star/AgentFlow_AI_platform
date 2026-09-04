@@ -105,6 +105,7 @@ async function runExecution(execution, workflow, userId, inputs) {
 
 async function listExecutions(userId, { page = 1, limit = 50, status, workflowId } = {}) {
   const query = {};
+  if (userId) query.owner = userId;
   if (status) query.status = status;
   if (workflowId) query.workflowId = workflowId;
 

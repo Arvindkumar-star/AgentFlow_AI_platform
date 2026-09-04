@@ -29,6 +29,9 @@ async function getDashboardStats(userId) {
 
 async function listWorkflows(userId, { page = 1, limit = 50, search, status } = {}) {
   const query = {};
+  if (userId) {
+    query.$or = [{ owner: userId }, { isTemplate: true }, { isPublic: true }];
+  }
   if (status) query.status = status;
   if (search) query.$text = { $search: search };
 
