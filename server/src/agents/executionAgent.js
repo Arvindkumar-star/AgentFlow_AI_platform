@@ -17,6 +17,7 @@ async function executionAgent(node, context, integrationService) {
         break;
 
       // Gmail & Auth Check — also handle AI-generated aliases
+      // Gmail & Auth Check & Email Notifications
       case 'check_auth':
       case 'checkAuth':
       case 'auth':
@@ -25,7 +26,9 @@ async function executionAgent(node, context, integrationService) {
       case 'email':
       case 'send':
       case 'sendEmail':
-      case 'send_email': {
+      case 'send_email':
+      case 'email_notification':
+      case 'emailNotification': {
         const nodeLabel = (node.label || '').toLowerCase();
         const isAuthCheck = type.includes('auth') ||
           ['checkAuth', 'checkAuthentication', 'getProfile', 'getEmail', 'status', 'verify'].includes(data.action) ||
@@ -33,12 +36,51 @@ async function executionAgent(node, context, integrationService) {
 
         const isRead = ['read', 'fetch', 'fetchLatest', 'search', 'getLatest', 'readInvoice', 'getInvoice'].includes(data.action) ||
           nodeLabel.includes('read') || nodeLabel.includes('invoice') || nodeLabel.includes('fetch') || nodeLabel.includes('inbox') ||
-          (!data.to && !data.recipient && !isAuthCheck);
+          (!data.to && !data.recipient && !isAuthCheck && !type.includes('notification') && !type.includes('send'));
+
+        const prev = data._previousOutput || {};
+
+        // If this is a send/notification action chained from a payment link or payout step
+        const isSendAction = !isAuthCheck && !isRead;
+        const paymentLink = data.paymentLink || prev.paymentLink || prev.short_url;
+        const recipient = data.to || data.recipient || data.email || data.recipientEmail || prev.recipientEmail || prev.email || prev.to;
+
+        if (isSendAction && paymentLink) {
+          const emailService = require('../services/emailService');
+          const amt = Number(data.amount || prev.amount || 0);
+          const vendor = data.recipientName || data.vendor || prev.vendor || prev.vendor_name || 'Valued Partner';
+          const invNum = data.invoiceNumber || prev.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
+
+          const dispatchResult = await emailService.sendGuardedPaymentLinkEmail({
+            to: recipient,
+            recipientName: vendor,
+            amount: amt,
+            invoiceNumber: invNum,
+            paymentLink,
+            userId: context.userId,
+            description: data.description || `Payment request for ${invNum}`,
+          });
+
+          result.output = {
+            success: true,
+            status: dispatchResult.dispatched ? 'EMAIL_SENT' : 'EMAIL_SKIPPED',
+            dispatched: dispatchResult.dispatched,
+            skipped: dispatchResult.skipped || false,
+            to: recipient || null,
+            paymentLink,
+            emailDispatch: dispatchResult,
+            message: dispatchResult.dispatched
+              ? `[Email Service] Payment link email successfully dispatched to ${recipient}`
+              : `[AgentGuard] Email integration not connected for user. Skipping email dispatch. Link: ${paymentLink}`,
+          };
+          break;
+        }
 
         const gmailAction = data.action || (isAuthCheck ? 'checkAuth' : isRead ? 'read' : 'send');
         try {
           result.output = await integrationService.execute('gmail', gmailAction, {
             ...data,
+            to: recipient,
             userId: context.userId,
           });
         } catch (err) {
@@ -70,6 +112,17 @@ async function executionAgent(node, context, integrationService) {
               invoiceDate: new Date().toISOString().split('T')[0],
               status: 'READ_SUCCESS',
               message: `Read vendor invoice email: ${vName} for ₹${reqAmt.toLocaleString()}.`,
+            };
+          } else if (isSendAction && (err.code === 'INTEGRATION_NOT_CONNECTED' || err.message?.includes('not connected'))) {
+            console.log('[AgentGuard] Email integration not connected for user. Skipping email dispatch.');
+            result.output = {
+              success: true,
+              simulated: true,
+              dispatched: false,
+              skipped: true,
+              to: recipient || null,
+              message: '[AgentGuard] Email integration not connected for user. Skipping email dispatch.',
+              note: 'Connect your Gmail or SMTP integration in /integrations to send live emails.',
             };
           } else {
             throw err;
@@ -178,6 +231,9 @@ async function executionAgent(node, context, integrationService) {
 
       case 'razorpay':
       case 'razorpay_payout':
+      case 'razorpay_payment_link':
+      case 'payment_link':
+      case 'paymentLink':
       case 'payout': {
         const { processPayoutNode } = require('./payoutAgent');
         const payoutOutput = await processPayoutNode(node, {

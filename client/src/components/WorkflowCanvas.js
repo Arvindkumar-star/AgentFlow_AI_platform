@@ -49,6 +49,8 @@ const NODE_TYPE_META = {
   razorpay:         { color: '#38bdf8', bg: '#081726', border: '#0284c7', icon: '💳', label: 'RAZORPAY' },
   razorpay_payout:  { color: '#38bdf8', bg: '#081726', border: '#0284c7', icon: '💳', label: 'RAZORPAY' },
   payout:           { color: '#38bdf8', bg: '#081726', border: '#0284c7', icon: '💳', label: 'RAZORPAY' },
+  payment_link:     { color: '#06b6d4', bg: '#081726', border: '#0891b2', icon: '🔗', label: 'RZP LINK' },
+  razorpay_payment_link: { color: '#06b6d4', bg: '#081726', border: '#0891b2', icon: '🔗', label: 'RZP LINK' },
   // Guardrails
   agentGuard:       { color: '#22d3ee', bg: '#081726', border: '#0e7490', icon: '🛡', label: 'ZK GUARD' },
   agent_guard:      { color: '#22d3ee', bg: '#081726', border: '#0e7490', icon: '🛡', label: 'ZK GUARD' },
@@ -62,7 +64,9 @@ const NODE_TYPE_META = {
   trigger:          { color: '#10b981', bg: '#022c1e', border: '#065f46', icon: '▶', label: 'TRIGGER' },
   manual:           { color: '#10b981', bg: '#022c1e', border: '#065f46', icon: '▶', label: 'TRIGGER' },
   start:            { color: '#10b981', bg: '#022c1e', border: '#065f46', icon: '▶', label: 'TRIGGER' },
-  // Gmail
+  // Email & Notifications
+  email_notification: { color: '#f97316', bg: '#2b1105', border: '#c2410c', icon: '📧', label: 'EMAIL DISPATCH' },
+  emailNotification:  { color: '#f97316', bg: '#2b1105', border: '#c2410c', icon: '📧', label: 'EMAIL DISPATCH' },
   gmail:            { color: '#f87171', bg: '#2d0a0a', border: '#7f1d1d', icon: '✉', label: 'GMAIL' },
   email:            { color: '#f87171', bg: '#2d0a0a', border: '#7f1d1d', icon: '✉', label: 'EMAIL' },
   send:             { color: '#f87171', bg: '#2d0a0a', border: '#7f1d1d', icon: '✉', label: 'GMAIL' },
@@ -105,21 +109,21 @@ function getNodePreview(data, type) {
     return `Max: ₹${max} · Req: ₹${req}`;
   }
 
-  // Razorpay Payout
-  if (['razorpay', 'razorpay_payout', 'payout'].includes(t)) {
+  // Razorpay Payout & Link
+  if (['razorpay', 'razorpay_payout', 'payout', 'payment_link', 'razorpay_payment_link'].includes(t)) {
     const amt = data.amount !== undefined ? data.amount : (data.requestedAmount || 4200);
     const vendor = data.vendor || 'AWS India';
-    return `Vendor: ${vendor} · ₹${amt}`;
+    return `${t.includes('link') ? 'Payment Link' : 'Payout'}: ₹${amt} (${vendor})`;
   }
 
-  // Gmail / email
-  if (['gmail', 'email', 'send', 'sendEmail'].includes(t)) {
+  // Gmail / email / email_notification
+  if (['gmail', 'email', 'send', 'sendEmail', 'email_notification', 'emailNotification'].includes(t)) {
     const parts = [];
     if (data.to)      parts.push(`To: ${data.to}`);
     if (data.subject) parts.push(data.subject);
     if (data.subtitle && !parts.length) parts.push(data.subtitle);
     if ((data.message || data.body) && parts.length <= 1) parts.push((data.message || data.body).slice(0, 35));
-    return parts.join(' · ') || 'Send email';
+    return parts.join(' · ') || 'Dispatch payment email';
   }
   // Trigger
   if (['trigger', 'manual', 'start'].includes(t)) {
@@ -348,10 +352,26 @@ function FlowNode({ data, selected, type }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: 6,
           }}
         >
           <span>{meta.label}</span>
-          <span style={{ fontSize: 8, opacity: 0.7 }}>ACTIVE</span>
+          {['email_notification', 'emailNotification', 'gmail', 'email', 'sendEmail'].includes(resolvedType) ? (
+            <span style={{
+              fontSize: 7.5,
+              padding: '1px 5px',
+              borderRadius: 4,
+              background: 'rgba(249, 115, 22, 0.15)',
+              color: '#f97316',
+              border: '1px solid rgba(249, 115, 22, 0.35)',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+            }}>
+              Requires Connected Email Service
+            </span>
+          ) : (
+            <span style={{ fontSize: 8, opacity: 0.7 }}>ACTIVE</span>
+          )}
         </div>
       )}
 

@@ -29,6 +29,15 @@ const PALETTE_GROUPS = [
         color: '#38bdf8',
         icon: '💳',
         desc: 'Automated payout & OTP approval',
+        badge: 'HITL',
+      },
+      {
+        type: 'payment_link',
+        label: 'Razorpay Link Generator',
+        color: '#06b6d4',
+        icon: '🔗',
+        desc: 'Generate rzp.io payment link',
+        badge: 'LINK',
       },
     ],
   },
@@ -51,6 +60,7 @@ const PALETTE_GROUPS = [
   {
     label: 'Communication',
     items: [
+      { type: 'email_notification', label: 'Email Notification', color: '#f97316', icon: '📧', desc: 'Dispatch payment links & emails', badge: 'GUARDED' },
       { type: 'gmail',         label: 'Gmail',         color: '#ef4444', icon: '✉',  desc: 'Send / read email' },
       { type: 'slack',         label: 'Slack',         color: '#4a154b', icon: '💬', desc: 'Post to channel' },
       { type: 'discord',       label: 'Discord',       color: '#5865f2', icon: '🎮', desc: 'Post bot message' },

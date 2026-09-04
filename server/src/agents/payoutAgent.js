@@ -32,6 +32,17 @@ async function processPayoutNode(node, executionContext = {}) {
   }
   vendor = vendor || 'AWS India';
 
+  // Extract recipient email if provided in node data, previous steps, or execution context
+  let recipientEmail = node.data?.recipientEmail || node.data?.email || prev.recipientEmail || prev.email || prev.emailAddress || executionContext.inputs?.recipientEmail || executionContext.inputs?.email;
+  if (!recipientEmail) {
+    for (const prevOut of Object.values(executionContext.outputs || {})) {
+      if (prevOut?.recipientEmail || prevOut?.email || prevOut?.emailAddress) {
+        recipientEmail = prevOut.recipientEmail || prevOut.email || prevOut.emailAddress;
+        break;
+      }
+    }
+  }
+
   // 1. If this node is an invoice extraction step (e.g. prompt: "Extract payment details..."), treat as extraction step, NOT payout execution
   if (node.data?.task === 'extract' || (node.data?.prompt && node.data.prompt.toLowerCase().includes('extract'))) {
     return {
@@ -41,6 +52,7 @@ async function processPayoutNode(node, executionContext = {}) {
       requestedAmount,
       vendor,
       vendor_name: vendor,
+      recipientEmail: recipientEmail || null,
       invoiceNumber: 'INV-2026-4200',
       message: `Extracted invoice details for ${vendor}: ₹${requestedAmount}. Ready for AgentGuard ZK verification.`,
     };
@@ -64,10 +76,21 @@ async function processPayoutNode(node, executionContext = {}) {
     };
   }
 
+  // Generate Draft Payout & Payment Link with Guarded Automated Email Dispatch
   const payoutDraft = await razorpayService.createDraftPayout({
     amount: requestedAmount,
     vendor,
     accountNumber: node.data?.accountNumber || '11214311215411',
+  });
+
+  const paymentLinkResult = await razorpayService.createPaymentLink({
+    amount: requestedAmount,
+    recipientName: vendor,
+    recipientEmail: recipientEmail || null,
+    invoiceNumber: node.data?.invoiceNumber || prev.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
+    description: `Automated payment for ${vendor}`,
+    userId: executionContext.userId,
+    autoEmail: true,
   });
 
   // Register pending transaction in MongoDB
@@ -86,6 +109,10 @@ async function processPayoutNode(node, executionContext = {}) {
       workflowId: executionContext.workflowId,
       nodeId: node.id,
       userId: executionContext.userId,
+      notes: {
+        paymentLink: paymentLinkResult.short_url,
+        emailDispatched: paymentLinkResult.emailDispatch?.dispatched || false,
+      },
     });
 
     if (executionContext.userId) {
@@ -93,7 +120,7 @@ async function processPayoutNode(node, executionContext = {}) {
         owner: executionContext.userId,
         type: 'warning',
         title: 'Payout Approval Required',
-        message: `Draft payout of ₹${payoutDraft.amount / 100} for ${payoutDraft.vendor_name} requires your approval.`,
+        message: `Draft payout of ₹${payoutDraft.amount / 100} for ${payoutDraft.vendor_name} requires your approval. Payment link: ${paymentLinkResult.short_url}`,
         executionId: executionContext.executionId,
         workflowId: executionContext.workflowId,
       });
@@ -105,12 +132,15 @@ async function processPayoutNode(node, executionContext = {}) {
         payoutId: payoutDraft.id,
         amount: payoutDraft.amount / 100,
         vendor: payoutDraft.vendor_name,
+        paymentLink: paymentLinkResult.short_url,
+        emailDispatch: paymentLinkResult.emailDispatch,
         nodeId: node.id,
       };
       emitAgentEvent(executionContext.executionId, payload);
       const io = getIO();
       if (io) {
         io.emit('payout_pending', payload);
+        io.emit('payment_link_generated', payload);
       }
     } catch (_) {}
   } catch (err) {
@@ -124,9 +154,15 @@ async function processPayoutNode(node, executionContext = {}) {
     payoutStatus: payoutDraft.status,
     amount: payoutDraft.amount / 100,
     vendor: payoutDraft.vendor_name,
+    paymentLink: paymentLinkResult.short_url,
+    short_url: paymentLinkResult.short_url,
+    emailDispatch: paymentLinkResult.emailDispatch,
     requiresApproval: true,
-    message: `Draft payout of ₹${payoutDraft.amount / 100} created for ${payoutDraft.vendor_name}. Awaiting Human-in-the-Loop approval.`,
-    payoutDetails: payoutDraft,
+    message: `Draft payout of ₹${payoutDraft.amount / 100} created for ${payoutDraft.vendor_name}. Payment link generated: ${paymentLinkResult.short_url}`,
+    payoutDetails: {
+      ...payoutDraft,
+      paymentLink: paymentLinkResult.short_url,
+    },
   };
 }
 

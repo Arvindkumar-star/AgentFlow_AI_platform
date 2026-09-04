@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 const TYPE_META = {
   trigger:        { color: '#10b981', label: 'Trigger' },
   gmail:          { color: '#ef4444', label: 'Gmail' },
+  email_notification: { color: '#f97316', label: 'Email Notification (Guarded)' },
   slack:          { color: '#818cf8', label: 'Slack' },
   discord:        { color: '#a78bfa', label: 'Discord' },
   'google-sheets':{ color: '#34d399', label: 'Google Sheets' },
@@ -16,6 +17,7 @@ const TYPE_META = {
   razorpay:       { color: '#38bdf8', label: 'Razorpay Payment System (HITL Payout)' },
   razorpay_payout:{ color: '#38bdf8', label: 'Razorpay Payment System (HITL Payout)' },
   payout:         { color: '#38bdf8', label: 'Razorpay Payment System (HITL Payout)' },
+  payment_link:   { color: '#06b6d4', label: 'Razorpay Payment Link Generator' },
 };
 
 export default function NodeConfigPanel({ node, onSave }) {
@@ -31,7 +33,8 @@ export default function NodeConfigPanel({ node, onSave }) {
   const rawId = String(node?.id || '').toLowerCase();
 
   const isAgentGuard = rawType.includes('agentguard') || rawType.includes('zk') || rawType.includes('guard') || rawLabel.includes('agentguard') || rawLabel.includes('zk') || rawId.includes('agentguard');
-  const isRazorpay = rawType.includes('razorpay') || rawType.includes('payout') || rawLabel.includes('razorpay') || rawLabel.includes('payout') || rawId.includes('razorpay');
+  const isRazorpay = rawType.includes('razorpay') || rawType.includes('payout') || rawType.includes('payment_link') || rawLabel.includes('razorpay') || rawLabel.includes('payout') || rawId.includes('razorpay');
+  const isEmail = rawType.includes('email') || rawType.includes('gmail') || rawLabel.includes('email') || rawLabel.includes('mail');
 
   const meta = TYPE_META[nodeType] || { color: '#67e8f9', label: nodeType };
 
@@ -59,11 +62,17 @@ export default function NodeConfigPanel({ node, onSave }) {
       if (configData.mode === undefined) configData.mode = 'NEFT';
     }
 
+    // Prepopulate Email Notification defaults if not set
+    if (isEmail && !configData.to) {
+      configData.to = configData.to || 'vendor@example.com';
+      configData.subject = configData.subject || 'Payment Request Notification';
+    }
+
     setConfig(JSON.stringify(configData, null, 2));
     setError('');
     setDirty(false);
     setSaved(false);
-  }, [node?.id, isAgentGuard, isRazorpay]); // only reset when a DIFFERENT node is selected
+  }, [node?.id, isAgentGuard, isRazorpay, isEmail]);
 
   const handleSave = useCallback(() => {
     try {
@@ -284,6 +293,77 @@ export default function NodeConfigPanel({ node, onSave }) {
                 }}
                 placeholder="e.g. AWS India"
               />
+            </div>
+          </div>
+        )}
+
+        {isEmail && (
+          <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-panel-muted)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f97316' }}>
+                📧 Automated Email Dispatch
+              </div>
+              <span style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: 4, background: 'rgba(249,115,22,0.15)', color: '#f97316', border: '1px solid rgba(249,115,22,0.3)' }}>
+                AgentGuard
+              </span>
+            </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                Recipient Email Address (To)
+              </label>
+              <input
+                type="email"
+                className="input"
+                style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }}
+                value={(() => {
+                  try {
+                    const p = JSON.parse(config);
+                    return p.to ?? p.recipientEmail ?? p.email ?? node.data?.to ?? '';
+                  } catch {
+                    return node.data?.to ?? '';
+                  }
+                })()}
+                onChange={e => {
+                  try {
+                    const parsed = JSON.parse(config || '{}');
+                    parsed.to = e.target.value;
+                    parsed.recipientEmail = e.target.value;
+                    setConfig(JSON.stringify(parsed, null, 2));
+                    setDirty(true);
+                  } catch {}
+                }}
+                placeholder="vendor@company.com"
+              />
+            </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
+                Email Subject
+              </label>
+              <input
+                type="text"
+                className="input"
+                style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem' }}
+                value={(() => {
+                  try {
+                    const p = JSON.parse(config);
+                    return p.subject ?? node.data?.subject ?? 'Payment Request Notification';
+                  } catch {
+                    return node.data?.subject ?? 'Payment Request Notification';
+                  }
+                })()}
+                onChange={e => {
+                  try {
+                    const parsed = JSON.parse(config || '{}');
+                    parsed.subject = e.target.value;
+                    setConfig(JSON.stringify(parsed, null, 2));
+                    setDirty(true);
+                  } catch {}
+                }}
+                placeholder="Payment Request Notification"
+              />
+            </div>
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-faint)', lineHeight: 1.4, padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: 6, border: '1px solid var(--border)' }}>
+              🛡️ <strong>Integration Guard:</strong> If Gmail or SMTP is not connected in <code>/integrations</code>, the payment link generates safely without failing the workflow.
             </div>
           </div>
         )}
