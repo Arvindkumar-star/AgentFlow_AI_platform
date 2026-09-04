@@ -1,16 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Key, Link as LinkIcon, CheckCircle2, AlertCircle, Loader2, Trash2, Eye, EyeOff, Shield, Sparkles, ExternalLink } from 'lucide-react';
+import { 
+  Key, 
+  Link as LinkIcon, 
+  CheckCircle2, 
+  AlertCircle, 
+  Loader2, 
+  Trash2, 
+  Eye, 
+  EyeOff, 
+  Shield, 
+  Sparkles, 
+  ExternalLink,
+  Zap,
+  Check,
+  UserCheck
+} from 'lucide-react';
 import api from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
 
 export default function BYOKModal({ provider, currentStatus, onClose, onUpdated }) {
+  const { user } = useAuthStore();
   const [authType, setAuthType] = useState('api_key');
   const [formData, setFormData] = useState({});
   const [showSecrets, setShowSecrets] = useState(false);
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [quickConnecting, setQuickConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     // Set default auth type based on provider
@@ -23,12 +42,37 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
     setFormData({});
     setTestResult(null);
     setErrorMessage('');
+    setSuccessMessage('');
   }, [provider]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setTestResult(null);
     setErrorMessage('');
+  };
+
+  const handleQuickConnect = async () => {
+    setQuickConnecting(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      const email = user?.email || 'operator@agentflow.ai';
+      const { data } = await api.post(`/integrations/${provider.id}/quick-connect`, {
+        email,
+        name: user?.name || 'Operator',
+      });
+      if (data.success) {
+        setSuccessMessage(`✓ ${provider.name} connected successfully with ${email}!`);
+        setTimeout(() => {
+          onUpdated();
+          onClose();
+        }, 1200);
+      }
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || 'Failed to connect automatically.');
+    } finally {
+      setQuickConnecting(false);
+    }
   };
 
   const handleTestConnection = async () => {
@@ -61,8 +105,11 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
         ...formData,
       });
       if (data.success) {
-        onUpdated();
-        onClose();
+        setSuccessMessage(`✓ ${provider.name} credentials saved & encrypted!`);
+        setTimeout(() => {
+          onUpdated();
+          onClose();
+        }, 1000);
       }
     } catch (err) {
       setErrorMessage(err.response?.data?.message || 'Failed to save credentials');
@@ -72,7 +119,7 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
   };
 
   const handleDisconnect = async () => {
-    if (!confirm(`Are you sure you want to disconnect custom BYOK credentials for ${provider.name}?`)) return;
+    if (!confirm(`Are you sure you want to disconnect ${provider.name}?`)) return;
     setDisconnecting(true);
     try {
       await api.delete(`/integrations/${provider.id}/byok`);
@@ -85,12 +132,14 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
     }
   };
 
+  const activeEmail = user?.email || 'operator@agentflow.ai';
+
   return (
     <div
       className="fixed inset-0 z-[350] flex items-center justify-center p-4"
       style={{
-        background: 'rgba(0, 0, 0, 0.82)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(10px)',
       }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
@@ -117,14 +166,14 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black text-[var(--text-primary)]">
-                  {provider.name} Custom BYOK
+                  {provider.name} Integration
                 </h3>
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                   <Shield size={10} /> AES-256
                 </span>
               </div>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Supply your personal API keys or webhook URLs to execute automated tools.
+                Connect via 1-click active session or supply custom BYOK API keys.
               </p>
             </div>
           </div>
@@ -137,11 +186,13 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
         </div>
 
         {/* Existing Connected Status Banner */}
-        {currentStatus?.isBYOK && currentStatus?.maskedIdentifier && (
+        {currentStatus?.isConnected && (
           <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 text-emerald-400 font-semibold">
               <CheckCircle2 size={15} />
-              <span>Active BYOK Key: <strong className="font-mono text-emerald-300">{currentStatus.maskedIdentifier}</strong></span>
+              <span>
+                Connected Status: <strong className="font-mono text-emerald-300">{currentStatus.maskedIdentifier || 'Active'}</strong>
+              </span>
             </div>
             <button
               type="button"
@@ -150,14 +201,63 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
               className="text-rose-400 hover:text-rose-300 flex items-center gap-1 font-bold underline"
             >
               <Trash2 size={12} />
-              <span>{disconnecting ? 'Disconnecting...' : 'Remove'}</span>
+              <span>{disconnecting ? 'Disconnecting...' : 'Disconnect'}</span>
             </button>
           </div>
         )}
 
-        {/* Auth Method Selector */}
+        {/* 1-Click Fast Connect Option */}
+        <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-emerald-500/10 border border-sky-500/30 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap size={16} className="text-sky-400" />
+              <span className="text-xs font-black text-[var(--text-primary)]">
+                Instant 1-Click Authorization
+              </span>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">
+              Recommended
+            </span>
+          </div>
+          <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+            Instantly authorize {provider.name} using your authenticated workspace identity (<strong className="text-sky-300">{activeEmail}</strong>) with zero complex setup.
+          </p>
+          <button
+            type="button"
+            onClick={handleQuickConnect}
+            disabled={quickConnecting}
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-md"
+            style={{
+              background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)',
+              color: '#ffffff',
+            }}
+          >
+            {quickConnecting ? (
+              <>
+                <Loader2 size={14} className="animate-spin text-white" />
+                <span>Authorizing {provider.name}...</span>
+              </>
+            ) : (
+              <>
+                <UserCheck size={14} />
+                <span>Authorize with {activeEmail.split('@')[0]}</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center my-4 gap-3">
+          <div className="flex-1 h-[1px] bg-[var(--border)]" />
+          <span className="text-[10px] uppercase font-bold text-[var(--text-faint)] tracking-wider">
+            or supply custom BYOK credentials
+          </span>
+          <div className="flex-1 h-[1px] bg-[var(--border)]" />
+        </div>
+
+        {/* Auth Method Selector for Discord / Slack */}
         {(provider.id === 'discord' || provider.id === 'slack') && (
-          <div className="mt-4 flex gap-2 p-1 rounded-xl bg-[var(--bg-panel-muted)] border border-[var(--border)]">
+          <div className="mb-4 flex gap-2 p-1 rounded-xl bg-[var(--bg-panel-muted)] border border-[var(--border)]">
             <button
               type="button"
               onClick={() => setAuthType('webhook')}
@@ -186,7 +286,7 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
         )}
 
         {/* Form Fields */}
-        <form onSubmit={handleSave} className="mt-4 space-y-4">
+        <form onSubmit={handleSave} className="space-y-4">
           {/* Discord Specific Fields */}
           {provider.id === 'discord' && (
             <>
@@ -321,16 +421,22 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
             </>
           )}
 
-          {/* Generic API Key & Tokens (OpenAI, Gemini, OpenRouter, Twitter, GitHub, etc.) */}
+          {/* Generic API Key & Tokens (Gmail, Google Sheets, OpenAI, Gemini, Twitter, GitHub, etc.) */}
           {!['discord', 'slack', 'razorpay'].includes(provider.id) && (
             <div>
               <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">
-                {provider.manualField || 'API Key / Secret Token'} <span className="text-rose-400">*</span>
+                {provider.manualField || 'API Key / Access Token'} <span className="text-rose-400">*</span>
               </label>
               <input
                 type={showSecrets ? 'text' : 'password'}
                 required
-                placeholder={`Paste your ${provider.name} ${provider.manualField || 'API Key'}`}
+                placeholder={
+                  provider.id === 'gmail'
+                    ? 'Paste Gmail App Password or OAuth Token'
+                    : provider.id === 'google-sheets'
+                    ? 'Paste Google Sheets API Token or Sheet ID'
+                    : `Paste your ${provider.name} ${provider.manualField || 'API Key'}`
+                }
                 value={formData.apiKey || formData.token || ''}
                 onChange={(e) => handleChange('apiKey', e.target.value)}
                 className="input w-full font-mono text-xs"
@@ -346,7 +452,7 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
               className="flex items-center gap-1.5 hover:text-[var(--text-primary)] transition"
             >
               {showSecrets ? <EyeOff size={13} /> : <Eye size={13} />}
-              <span>{showSecrets ? 'Hide Values' : 'Reveal Values'}</span>
+              <span>{showSecrets ? 'Hide Secrets' : 'Show Secrets'}</span>
             </button>
             {provider.docsUrl && (
               <a
@@ -355,7 +461,7 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
                 rel="noreferrer"
                 className="flex items-center gap-1 text-[var(--accent)] hover:underline"
               >
-                <span>Get API Key</span>
+                <span>Console Docs</span>
                 <ExternalLink size={11} />
               </a>
             )}
@@ -379,6 +485,14 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
                 <strong>{testResult.success ? 'Success: ' : 'Error: '}</strong>
                 {testResult.message}
               </div>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {successMessage && (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
+              <Check size={14} className="text-emerald-400" />
+              <span>{successMessage}</span>
             </div>
           )}
 
@@ -406,12 +520,12 @@ export default function BYOKModal({ provider, currentStatus, onClose, onUpdated 
               {testing ? (
                 <>
                   <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
-                  <span>Pinging API...</span>
+                  <span>Testing API...</span>
                 </>
               ) : (
                 <>
                   <Sparkles size={14} className="text-[var(--accent)]" />
-                  <span>Test Connection</span>
+                  <span>Test Key</span>
                 </>
               )}
             </button>

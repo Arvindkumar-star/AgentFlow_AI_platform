@@ -156,38 +156,19 @@ function IntegrationCard({ provider, statusInfo, oauthConfigured, onOpenBYOK, on
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          {/* BYOK Custom Keys Button */}
           {provider.id !== 'agentguard' && (
             <button
               type="button"
               onClick={() => onOpenBYOK(provider)}
-              className="flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border card-hover"
+              className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border card-hover"
               style={{
-                background: isBYOK ? `${provider.color}20` : 'var(--bg-panel-muted)',
-                borderColor: isBYOK ? `${provider.color}50` : 'var(--border)',
-                color: isBYOK ? provider.color : 'var(--text-primary)',
+                background: isConnected ? `${provider.color}15` : 'var(--bg-panel-muted)',
+                borderColor: isConnected ? `${provider.color}40` : 'var(--border)',
+                color: isConnected ? provider.color : 'var(--text-primary)',
               }}
             >
               <Key size={13} />
-              <span>{isBYOK ? 'Edit BYOK Key' : 'Custom BYOK Key'}</span>
-            </button>
-          )}
-
-          {/* System OAuth Button (for Gmail, Google Sheets, LinkedIn) */}
-          {canOAuth && !isBYOK && (
-            <button
-              type="button"
-              onClick={() => onOAuthConnect(provider)}
-              className="py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition"
-              style={{
-                background: `${provider.color}20`,
-                borderColor: `${provider.color}40`,
-                color: provider.color,
-                border: '1px solid',
-              }}
-              title="Connect via System OAuth"
-            >
-              <span>OAuth</span>
+              <span>{isConnected ? 'Manage Key / Connect' : 'Connect & Configure'}</span>
             </button>
           )}
 
@@ -196,7 +177,7 @@ function IntegrationCard({ provider, statusInfo, oauthConfigured, onOpenBYOK, on
             <button
               type="button"
               onClick={() => onDisconnect(provider.id)}
-              className="py-2 px-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 transition flex items-center justify-center flex-shrink-0"
+              className="py-2.5 px-3 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 transition flex items-center justify-center flex-shrink-0"
               title="Disconnect"
             >
               <Trash2 size={13} />
@@ -205,7 +186,7 @@ function IntegrationCard({ provider, statusInfo, oauthConfigured, onOpenBYOK, on
 
           {/* AgentGuard Special Builtin Badge */}
           {provider.id === 'agentguard' && (
-            <div className="w-full py-2 px-3 rounded-xl text-xs font-bold text-center text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-1.5">
+            <div className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-center text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-1.5">
               <Shield size={13} />
               <span>Groth16 Engine Active</span>
             </div>

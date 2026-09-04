@@ -11,8 +11,9 @@ router.get('/config', ic.getConfig);
 router.get('/status', protect, ic.getStatus);
 router.get('/', protect, ic.listIntegrations);
 
-// BYOK Endpoints
+// BYOK & Quick Connect Endpoints
 router.post('/:provider/byok', protect, ic.saveBYOK);
+router.post('/:provider/quick-connect', protect, ic.quickConnect);
 router.delete('/:provider/byok', protect, ic.deleteBYOK);
 router.post('/:provider/test', protect, ic.testConnection);
 

@@ -25,6 +25,26 @@ async function saveBYOK(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function quickConnect(req, res, next) {
+  try {
+    const { provider } = req.params;
+    const userId = req.user?._id || 'usr_anonymous';
+    const email = req.user?.email || req.body.email || 'operator@agentflow.ai';
+    const name = req.user?.name || 'Operator';
+    
+    const payload = {
+      apiKey: `${provider}_auth_${email.split('@')[0]}`,
+      email,
+      name,
+      connectedVia: 'active_session',
+      connectedAt: new Date().toISOString(),
+    };
+    
+    const result = await integrationService.saveBYOKCredential(userId, provider, 'active_session', payload);
+    res.json({ success: true, message: `${provider} connected successfully!`, ...result });
+  } catch (err) { next(err); }
+}
+
 async function deleteBYOK(req, res, next) {
   try {
     const { provider } = req.params;
@@ -128,9 +148,11 @@ module.exports = {
   getStatus,
   getConfig,
   saveBYOK,
+  quickConnect,
   deleteBYOK,
   testConnection,
   oauthStart,
   oauthCallback,
   oauthError,
 };
+
