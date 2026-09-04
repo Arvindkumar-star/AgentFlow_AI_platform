@@ -89,11 +89,11 @@ class RazorpayService {
 
     // Step: Guarded Automated Email Dispatch
     let emailDispatch = { dispatched: false, skipped: true, reason: 'No recipient email specified' };
-    if (autoEmail && recipientEmail && recipientEmail.trim()) {
+    if (autoEmail && (recipientEmail || userId)) {
       try {
         const emailService = require('./emailService');
         emailDispatch = await emailService.sendGuardedPaymentLinkEmail({
-          to: recipientEmail.trim(),
+          to: recipientEmail ? recipientEmail.trim() : null,
           recipientName,
           amount: parsedAmount,
           invoiceNumber: cleanInvoice,

@@ -414,7 +414,7 @@ class EmailService {
       userId,
       async (status) => {
         return this.sendPaymentLinkEmail({
-          to: to.trim(),
+          to: resolvedTo,
           recipientName,
           amount,
           invoiceNumber,
@@ -424,7 +424,7 @@ class EmailService {
           userId,
         });
       },
-      { paymentLink, to, invoiceNumber }
+      { paymentLink, to: resolvedTo, invoiceNumber }
     );
   }
 }

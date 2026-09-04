@@ -44,14 +44,9 @@ async function executionAgent(node, context, integrationService) {
           ['checkAuth', 'checkAuthentication', 'getProfile', 'getEmail', 'status', 'verify'].includes(data.action) ||
           nodeLabel.includes('auth') || nodeLabel.includes('check');
 
-        const isRead = ['read', 'fetch', 'fetchLatest', 'search', 'getLatest', 'readInvoice', 'getInvoice'].includes(data.action) ||
-          nodeLabel.includes('read') || nodeLabel.includes('invoice') || nodeLabel.includes('fetch') || nodeLabel.includes('inbox') ||
-          (!data.to && !data.recipient && !isAuthCheck && !type.includes('notification') && !type.includes('send'));
-
         const prev = data._previousOutput || {};
 
-        // If this is a send/notification action chained from a payment link or payout step
-        const isSendAction = !isAuthCheck && !isRead;
+        // Find payment link from upstream steps if any
         let paymentLink = data.paymentLink || prev.paymentLink || prev.short_url;
         if (!paymentLink) {
           for (const prevOut of Object.values(context.outputs || {})) {
@@ -61,6 +56,16 @@ async function executionAgent(node, context, integrationService) {
             }
           }
         }
+
+        const hasUpstreamPayout = Boolean(paymentLink || prev.payoutId || Object.values(context.outputs || {}).some(o => o?.payoutId || o?.paymentLink));
+
+        const isRead = !hasUpstreamPayout && (
+          ['read', 'fetch', 'fetchLatest', 'search', 'getLatest', 'readInvoice', 'getInvoice'].includes(data.action) ||
+          ((nodeLabel.includes('read') || nodeLabel.includes('invoice') || nodeLabel.includes('fetch') || nodeLabel.includes('inbox')) &&
+           !nodeLabel.includes('send') && !nodeLabel.includes('notification') && !nodeLabel.includes('notify') && !nodeLabel.includes('payout'))
+        );
+
+        const isSendAction = !isAuthCheck && !isRead;
 
         let recipient = data.to || data.recipient || data.email || data.recipientEmail || prev.recipientEmail || prev.email || prev.to;
         if (!recipient) {
@@ -134,7 +139,13 @@ async function executionAgent(node, context, integrationService) {
             userId: context.userId,
           });
         } catch (err) {
-          if (isAuthCheck && (err.code === 'INTEGRATION_NOT_CONNECTED' || err.message?.includes('not connected') || err.message?.includes('invalid_grant'))) {
+          const isNotConnected = err.code === 'INTEGRATION_NOT_CONNECTED' ||
+            err.code === 'MISSING_INTEGRATION_CREDENTIALS' ||
+            err.message?.includes('not connected') ||
+            err.message?.includes('No active credentials') ||
+            err.message?.includes('invalid_grant');
+
+          if (isAuthCheck && isNotConnected) {
             result.output = {
               success: false,
               connected: false,
@@ -145,7 +156,7 @@ async function executionAgent(node, context, integrationService) {
               error: err.message,
               message: 'Gmail authentication check: account not connected or token expired. Please reconnect in Integrations.',
             };
-          } else if (isRead && (err.code === 'INTEGRATION_NOT_CONNECTED' || err.message?.includes('not connected') || err.message?.includes('invalid_grant'))) {
+          } else if (isRead && isNotConnected) {
             const reqAmt = Number(context.inputs?.requestedAmount ?? context.inputs?.amount ?? data.requestedAmount ?? data.amount ?? 4200);
             const vName = context.inputs?.vendor || context.inputs?.vendor_name || data.vendor || 'AWS India';
             result.output = {
@@ -163,7 +174,7 @@ async function executionAgent(node, context, integrationService) {
               status: 'READ_SUCCESS',
               message: `Read vendor invoice email: ${vName} for ₹${reqAmt.toLocaleString()}.`,
             };
-          } else if (isSendAction && (err.code === 'INTEGRATION_NOT_CONNECTED' || err.message?.includes('not connected'))) {
+          } else if (isSendAction && isNotConnected) {
             console.log('[AgentGuard] Email integration not connected for user. Skipping email dispatch.');
             result.output = {
               success: true,
