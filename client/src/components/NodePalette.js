@@ -20,7 +20,7 @@ const PALETTE_GROUPS = [
     ],
   },
   {
-    label: 'Razorpay Payment System',
+    label: 'Razorpay Payment & Email',
     isPayment: true,
     items: [
       {
@@ -39,22 +39,14 @@ const PALETTE_GROUPS = [
         desc: 'Generate rzp.io payment link',
         badge: 'LINK',
       },
-    ],
-  },
-  {
-    label: 'AI',
-    items: [
-      { type: 'ai',            label: 'AI / LLM',      color: '#c084fc', icon: '✦',  desc: 'LLM call / transform' },
-      { type: 'notification',  label: 'Notify',        color: '#67e8f9', icon: '🔔', desc: 'Send notification' },
-    ],
-  },
-  {
-    label: 'Social Media',
-    items: [
-      { type: 'twitter',       label: 'Twitter / X',   color: '#1d9bf0', icon: '🐦', desc: 'Post tweets' },
-      { type: 'linkedin',      label: 'LinkedIn',      color: '#0077b5', icon: '💼', desc: 'Post to feed' },
-      { type: 'facebook',      label: 'Facebook',      color: '#1877f2', icon: '👥', desc: 'Post to page' },
-      { type: 'instagram',     label: 'Instagram',     color: '#e1306c', icon: '📸', desc: 'Post photo' },
+      {
+        type: 'email_notification',
+        label: 'Email Notification',
+        color: '#f97316',
+        icon: '📧',
+        desc: 'Dispatch payment links & emails',
+        badge: 'GUARDED',
+      },
     ],
   },
   {
@@ -67,11 +59,27 @@ const PALETTE_GROUPS = [
     ],
   },
   {
+    label: 'AI & Automations',
+    items: [
+      { type: 'ai',            label: 'AI / LLM',      color: '#c084fc', icon: '✦',  desc: 'LLM call / transform' },
+      { type: 'notification',  label: 'Notify',        color: '#67e8f9', icon: '🔔', desc: 'Send notification' },
+    ],
+  },
+  {
     label: 'Productivity',
     items: [
       { type: 'google-sheets', label: 'Google Sheets', color: '#34d399', icon: '📊', desc: 'Append / read rows' },
       { type: 'notion',        label: 'Notion',        color: '#aaaaaa', icon: '📝', desc: 'Read / write pages' },
       { type: 'airtable',      label: 'Airtable',      color: '#fbbf24', icon: '⬡',  desc: 'Query base records' },
+    ],
+  },
+  {
+    label: 'Social Media',
+    items: [
+      { type: 'twitter',       label: 'Twitter / X',   color: '#1d9bf0', icon: '🐦', desc: 'Post tweets' },
+      { type: 'linkedin',      label: 'LinkedIn',      color: '#0077b5', icon: '💼', desc: 'Post to feed' },
+      { type: 'facebook',      label: 'Facebook',      color: '#1877f2', icon: '👥', desc: 'Post to page' },
+      { type: 'instagram',     label: 'Instagram',     color: '#e1306c', icon: '📸', desc: 'Post photo' },
     ],
   },
 ];
