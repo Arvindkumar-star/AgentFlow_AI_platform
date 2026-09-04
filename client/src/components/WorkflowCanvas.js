@@ -707,19 +707,31 @@ export default function WorkflowCanvas({
       setProofInspectorNode(null);
     };
 
+    const handleNodeConfigUpdate = (e) => {
+      const updated = e.detail;
+      if (!updated?.id) return;
+      const updatedNodes = nodes.map(n => n.id === updated.id ? { ...n, data: { ...n.data, ...updated } } : n);
+      onChange?.({ nodes: updatedNodes, edges });
+      if (proofInspectorNode?.id === updated.id) {
+        setProofInspectorNode(prev => prev ? { ...prev, ...updated, data: { ...(prev.data || {}), ...updated } } : null);
+      }
+    };
+
     window.addEventListener('open-agentguard-inspector', handleOpenInspector);
     window.addEventListener('zk-attack-simulated', handleAttackEvent);
     window.addEventListener('payout-approved', handlePayoutApproved);
     window.addEventListener('zk-simulation-reset', handleSimulationReset);
     window.addEventListener('workflow-run-start', handleSimulationReset);
+    window.addEventListener('update-node-config', handleNodeConfigUpdate);
     return () => {
       window.removeEventListener('open-agentguard-inspector', handleOpenInspector);
       window.removeEventListener('zk-attack-simulated', handleAttackEvent);
       window.removeEventListener('payout-approved', handlePayoutApproved);
       window.removeEventListener('zk-simulation-reset', handleSimulationReset);
       window.removeEventListener('workflow-run-start', handleSimulationReset);
+      window.removeEventListener('update-node-config', handleNodeConfigUpdate);
     };
-  }, [nodes, edges, onChange, handleAttackTriggered]);
+  }, [nodes, edges, onChange, handleAttackTriggered, proofInspectorNode]);
 
   // ── connection ──────────────────────────────────────────────────────────────
   const onConnect = useCallback(
@@ -996,6 +1008,11 @@ export default function WorkflowCanvas({
         isOpen={Boolean(proofInspectorNode)}
         onClose={() => setProofInspectorNode(null)}
         proofData={proofInspectorNode}
+        onUpdateNode={(updated) => {
+          const updatedNodes = nodes.map(n => n.id === updated.id ? { ...n, data: { ...n.data, ...updated } } : n);
+          onChange?.({ nodes: updatedNodes, edges });
+          setProofInspectorNode(prev => prev ? { ...prev, ...updated, data: { ...(prev.data || {}), ...updated } } : null);
+        }}
       />
 
       {/* Right-click context menu */}

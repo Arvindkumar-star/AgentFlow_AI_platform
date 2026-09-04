@@ -97,7 +97,6 @@ export default function AgentGuardNode({ data, selected, id }) {
         }
       `}</style>
       <div
-        onClick={handleInspectClick}
         style={{
           minWidth: 240,
           padding: '12px 16px',
@@ -119,7 +118,6 @@ export default function AgentGuardNode({ data, selected, id }) {
           animation: isAttacked ? 'attackPulse 1s ease-in-out infinite' : isPassing ? 'emeraldGlow 2.5s ease-in-out infinite' : 'none',
         }}
         className={`agentguard-node shadow-md ${selected ? 'ring-2 ring-cyan-400' : ''}`}
-        title="Click to inspect AgentGuard ZK Proof & Threat Telemetry"
       >
         {/* Target Handles (Left for horizontal flow, Top for vertical flow) */}
         <Handle
