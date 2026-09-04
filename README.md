@@ -22,13 +22,13 @@
 
 ## 🔗 Quick Links & Live Demonstrations
 
-| Resource | URL | Description |
+| Resource | URL / Link | Description |
 | :--- | :--- | :--- |
-| **🎬 Live Video Walkthrough** | [Google Drive Demo Video](https://drive.google.com/file/d/1WUK-8hWtNuZloXblGk8SlcuWsAKyr0bX/view) | Complete 5-minute technical platform walkthrough & live execution |
-| **🚀 Production Web App** | [agent-flow-ai-platform.vercel.app](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app) | Live multi-tenant web platform with visual canvas & fast payouts |
-| **📦 GitHub Repository** | [AgentFlow_AI_platform](https://github.com/Arvindkumar-star/AgentFlow_AI_platform) | Full-stack source code, Circom ZK circuits, and server agents |
-| **⚡ Fast Payouts Portal** | [/payouts](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app/payouts) | 1-Click AI Vision invoice parser, 2FA OTP modal, and Razorpay dispatch |
-| **🛡️ Risk & Analytics Center** | [/analytics](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app/analytics) | Real-time SnarkJS telemetry, ZK constraints inspector, and threat audit trail |
+| **🎬 Live Demo Video** | [Watch Google Drive Video ↗](https://drive.google.com/file/d/1WUK-8hWtNuZloXblGk8SlcuWsAKyr0bX/view) | Complete 5-minute technical platform walkthrough & live execution |
+| **🚀 Production Web App** | [Open Live Platform ↗](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app) | Live multi-tenant web platform with visual canvas & fast payouts |
+| **📦 GitHub Repository** | [AgentFlow_AI_platform ↗](https://github.com/Arvindkumar-star/AgentFlow_AI_platform) | Full-stack source code, Circom ZK circuits, and server agents |
+| **⚡ Fast Payouts Portal** | [Open Fast Payouts ↗](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app/payouts) | 1-Click AI Vision invoice parser, 2FA OTP modal, and Razorpay dispatch |
+| **🛡️ Risk & Analytics Center** | [Open Risk Analytics ↗](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app/analytics) | Real-time SnarkJS telemetry, ZK constraints inspector, and threat audit trail |
 
 ---
 
