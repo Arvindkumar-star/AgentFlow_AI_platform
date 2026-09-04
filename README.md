@@ -10,7 +10,7 @@
 
 [![Razorpay Buildathon](https://img.shields.io/badge/Built%20For-Razorpay%20AI%20Buildathon-0284c7?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com)
 [![Live Demo Video](https://img.shields.io/badge/🎬%20Watch-Live%20Demo%20Video-E11D48?style=for-the-badge&logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1WUK-8hWtNuZloXblGk8SlcuWsAKyr0bX/view)
-[![Live Web App](https://img.shields.io/badge/🚀%20Live-Web%20Platform-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app)
+[![Live Web App](https://img.shields.io/badge/🚀%20Live-Web%20Platform-10B981?style=for-the-badge&logo=vercel&logoColor=white)](https://agent-flow-ai-platform.vercel.app)
 [![Groth16 ZK](https://img.shields.io/badge/Zero--Knowledge-Groth16%20BN128-22D3EE?style=for-the-badge&logo=circuitverse&logoColor=white)](https://iden3.io/circom)
 [![Next.js 14](https://img.shields.io/badge/Frontend-Next.js%2014-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2F%20Express-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
@@ -25,10 +25,10 @@
 | Resource | URL / Link | Description |
 | :--- | :--- | :--- |
 | **🎬 Live Demo Video** | [Watch Google Drive Video ↗](https://drive.google.com/file/d/1WUK-8hWtNuZloXblGk8SlcuWsAKyr0bX/view) | Complete 5-minute technical platform walkthrough & live execution |
-| **🚀 Production Web App** | [Open Live Platform ↗](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app) | Live multi-tenant web platform with visual canvas & fast payouts |
+| **🚀 Production Web App** | [Open Live Platform ↗](https://agent-flow-ai-platform.vercel.app) | Live multi-tenant web platform with visual canvas & fast payouts |
 | **📦 GitHub Repository** | [AgentFlow_AI_platform ↗](https://github.com/Arvindkumar-star/AgentFlow_AI_platform) | Full-stack source code, Circom ZK circuits, and server agents |
-| **⚡ Fast Payouts Portal** | [Open Fast Payouts ↗](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app/payouts) | 1-Click AI Vision invoice parser, 2FA OTP modal, and Razorpay dispatch |
-| **🛡️ Risk & Analytics Center** | [Open Risk Analytics ↗](https://agent-flow-ai-platform-8urivuer1-arvinds-projects-bc1cdb31.vercel.app/analytics) | Real-time SnarkJS telemetry, ZK constraints inspector, and threat audit trail |
+| **⚡ Fast Payouts Portal** | [Open Fast Payouts ↗](https://agent-flow-ai-platform.vercel.app/payouts) | 1-Click AI Vision invoice parser, 2FA OTP modal, and Razorpay dispatch |
+| **🛡️ Risk & Analytics Center** | [Open Risk Analytics ↗](https://agent-flow-ai-platform.vercel.app/analytics) | Real-time SnarkJS telemetry, ZK constraints inspector, and threat audit trail |
 
 ---
 
