@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import AgentGuardPanel from './nodes/AgentGuardPanel';
 
 const TYPE_META = {
   trigger:        { color: '#10b981', label: 'Trigger' },
@@ -14,9 +15,11 @@ const TYPE_META = {
   ai:             { color: '#c084fc', label: 'AI' },
   agentGuard:     { color: '#22d3ee', label: 'AgentGuard ZK Guardrail' },
   agent_guard:    { color: '#22d3ee', label: 'AgentGuard ZK Guardrail' },
+  securityNode:   { color: '#22d3ee', label: 'AgentGuard ZK Guardrail' },
   razorpay:       { color: '#38bdf8', label: 'Razorpay Payment System (HITL Payout)' },
   razorpay_payout:{ color: '#38bdf8', label: 'Razorpay Payment System (HITL Payout)' },
   payout:         { color: '#38bdf8', label: 'Razorpay Payment System (HITL Payout)' },
+  payoutNode:     { color: '#38bdf8', label: 'Razorpay Payment System (HITL Payout)' },
   payment_link:   { color: '#06b6d4', label: 'Razorpay Payment Link Generator' },
 };
 
@@ -121,6 +124,11 @@ export default function NodeConfigPanel({ node, onSave }) {
         <span>Select a node to configure it</span>
       </div>
     );
+  }
+
+  // Render dedicated tabbed AgentGuard panel with manual policy config and live ZK telemetry
+  if (isAgentGuard) {
+    return <AgentGuardPanel node={node} onSave={onSave} />;
   }
 
   return (
