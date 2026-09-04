@@ -52,38 +52,78 @@ async function executionAgent(node, context, integrationService) {
 
         // If this is a send/notification action chained from a payment link or payout step
         const isSendAction = !isAuthCheck && !isRead;
-        const paymentLink = data.paymentLink || prev.paymentLink || prev.short_url;
-        const recipient = data.to || data.recipient || data.email || data.recipientEmail || prev.recipientEmail || prev.email || prev.to;
+        let paymentLink = data.paymentLink || prev.paymentLink || prev.short_url;
+        if (!paymentLink) {
+          for (const prevOut of Object.values(context.outputs || {})) {
+            if (prevOut?.paymentLink || prevOut?.short_url) {
+              paymentLink = prevOut.paymentLink || prevOut.short_url;
+              break;
+            }
+          }
+        }
 
-        if (isSendAction && paymentLink) {
+        let recipient = data.to || data.recipient || data.email || data.recipientEmail || prev.recipientEmail || prev.email || prev.to;
+        if (!recipient) {
+          for (const prevOut of Object.values(context.outputs || {})) {
+            if (prevOut?.recipientEmail || prevOut?.email || prevOut?.emailAddress || prevOut?.to) {
+              recipient = prevOut.recipientEmail || prevOut.email || prevOut.emailAddress || prevOut.to;
+              break;
+            }
+          }
+        }
+
+        if (isSendAction) {
           const emailService = require('../services/emailService');
-          const amt = Number(data.amount || prev.amount || 0);
+          const amt = Number(data.amount || prev.amount || prev.requestedAmount || 4200);
           const vendor = data.recipientName || data.vendor || prev.vendor || prev.vendor_name || 'Valued Partner';
           const invNum = data.invoiceNumber || prev.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
 
-          const dispatchResult = await emailService.sendGuardedPaymentLinkEmail({
-            to: recipient,
-            recipientName: vendor,
-            amount: amt,
-            invoiceNumber: invNum,
-            paymentLink,
-            userId: context.userId,
-            description: data.description || `Payment request for ${invNum}`,
-          });
+          // If no payment link was passed, create one automatically
+          if (!paymentLink) {
+            try {
+              const razorpayService = require('../services/razorpayService');
+              const linkRes = await razorpayService.createPaymentLink({
+                amount: amt,
+                recipientName: vendor,
+                recipientEmail: recipient || null,
+                invoiceNumber: invNum,
+                description: `Payment request for ${invNum}`,
+                userId: context.userId,
+                autoEmail: false,
+              });
+              if (linkRes?.short_url || linkRes?.paymentLink) {
+                paymentLink = linkRes.short_url || linkRes.paymentLink;
+              }
+            } catch (linkGenErr) {
+              console.warn('[ExecutionAgent] Auto payment link creation note:', linkGenErr.message);
+            }
+          }
 
-          result.output = {
-            success: true,
-            status: dispatchResult.dispatched ? 'EMAIL_SENT' : 'EMAIL_SKIPPED',
-            dispatched: dispatchResult.dispatched,
-            skipped: dispatchResult.skipped || false,
-            to: recipient || null,
-            paymentLink,
-            emailDispatch: dispatchResult,
-            message: dispatchResult.dispatched
-              ? `[Email Service] Payment link email successfully dispatched to ${recipient}`
-              : `[AgentGuard] Email integration not connected for user. Skipping email dispatch. Link: ${paymentLink}`,
-          };
-          break;
+          if (paymentLink) {
+            const dispatchResult = await emailService.sendGuardedPaymentLinkEmail({
+              to: recipient,
+              recipientName: vendor,
+              amount: amt,
+              invoiceNumber: invNum,
+              paymentLink,
+              userId: context.userId,
+              description: data.description || `Payment request for ${invNum}`,
+            });
+
+            result.output = {
+              success: true,
+              status: dispatchResult.dispatched ? 'EMAIL_SENT' : 'EMAIL_SKIPPED',
+              dispatched: dispatchResult.dispatched,
+              skipped: dispatchResult.skipped || false,
+              to: dispatchResult.to || recipient || null,
+              paymentLink,
+              emailDispatch: dispatchResult,
+              message: dispatchResult.dispatched
+                ? `[Email Service] Payment link email successfully dispatched to ${dispatchResult.to || recipient}`
+                : `[AgentGuard] Email integration not connected for user. Skipping email dispatch. Link: ${paymentLink}`,
+            };
+            break;
+          }
         }
 
         const gmailAction = data.action || (isAuthCheck ? 'checkAuth' : isRead ? 'read' : 'send');

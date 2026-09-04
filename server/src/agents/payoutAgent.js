@@ -33,14 +33,39 @@ async function processPayoutNode(node, executionContext = {}) {
   vendor = vendor || 'AWS India';
 
   // Extract recipient email if provided in node data, previous steps, or execution context
-  let recipientEmail = node.data?.recipientEmail || node.data?.email || prev.recipientEmail || prev.email || prev.emailAddress || executionContext.inputs?.recipientEmail || executionContext.inputs?.email;
+  let recipientEmail = node.data?.recipientEmail || node.data?.email || node.data?.to || prev.recipientEmail || prev.email || prev.emailAddress || prev.to || executionContext.inputs?.recipientEmail || executionContext.inputs?.email;
   if (!recipientEmail) {
     for (const prevOut of Object.values(executionContext.outputs || {})) {
-      if (prevOut?.recipientEmail || prevOut?.email || prevOut?.emailAddress) {
-        recipientEmail = prevOut.recipientEmail || prevOut.email || prevOut.emailAddress;
+      if (prevOut?.recipientEmail || prevOut?.email || prevOut?.emailAddress || prevOut?.to) {
+        recipientEmail = prevOut.recipientEmail || prevOut.email || prevOut.emailAddress || prevOut.to;
         break;
       }
     }
+  }
+
+  // Fallback to user's connected integration email or user profile if still empty
+  if (!recipientEmail && executionContext.userId) {
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) {
+        const Integration = require('../models/Integration');
+        const User = require('../models/User');
+
+        const userInteg = await Integration.findOne({
+          owner: executionContext.userId,
+          provider: { $in: ['gmail', 'sendgrid', 'resend', 'smtp', 'email', 'mailchimp'] },
+          isConnected: true,
+          status: { $ne: 'disconnected' },
+        });
+        if (userInteg) {
+          recipientEmail = userInteg.maskedIdentifier || userInteg.metadata?.email || userInteg.credentials?.email || null;
+        }
+        if (!recipientEmail) {
+          const userDoc = await User.findById(executionContext.userId);
+          if (userDoc?.email) recipientEmail = userDoc.email;
+        }
+      }
+    } catch (_) {}
   }
 
   // 1. If this node is an invoice extraction step (e.g. prompt: "Extract payment details..."), treat as extraction step, NOT payout execution

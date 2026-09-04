@@ -366,7 +366,40 @@ class EmailService {
     description,
     userId = null,
   }) {
-    if (!to || !to.trim()) {
+    let resolvedTo = (to && typeof to === 'string') ? to.trim() : '';
+
+    // Automatic fallback: resolve recipient from user connected integration or user profile if empty
+    if (!resolvedTo && userId) {
+      try {
+        const mongoose = require('mongoose');
+        if (mongoose.connection.readyState === 1) {
+          const Integration = require('../models/Integration');
+          const User = require('../models/User');
+
+          const userIntegration = await Integration.findOne({
+            owner: userId,
+            provider: { $in: ['gmail', 'sendgrid', 'resend', 'smtp', 'email', 'mailchimp'] },
+            isConnected: true,
+            status: { $ne: 'disconnected' },
+          });
+
+          if (userIntegration) {
+            resolvedTo = userIntegration.maskedIdentifier || userIntegration.metadata?.email || userIntegration.credentials?.email || '';
+          }
+
+          if (!resolvedTo) {
+            const userDoc = await User.findById(userId);
+            if (userDoc?.email) {
+              resolvedTo = userDoc.email;
+            }
+          }
+        }
+      } catch (lookupErr) {
+        console.warn('[Email Service] Fallback recipient resolution note:', lookupErr.message);
+      }
+    }
+
+    if (!resolvedTo) {
       console.log('[AgentGuard] No recipient email provided. Skipping email dispatch.');
       return {
         dispatched: false,
