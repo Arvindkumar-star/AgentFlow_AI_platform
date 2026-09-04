@@ -218,10 +218,11 @@ class EmailService {
     const resendKey = process.env.RESEND_API_KEY || env.RESEND_API_KEY;
     if (resendKey) {
       try {
+        const resendFrom = process.env.RESEND_FROM || env.RESEND_FROM || (sender && !sender.includes('agentflow.ai') ? sender : 'Agentflow AI <onboarding@resend.dev>');
         const res = await axios.post(
           'https://api.resend.com/emails',
           {
-            from: sender.includes('<') ? sender : `Agentflow AI <${sender}>`,
+            from: resendFrom.includes('<') ? resendFrom : `Agentflow AI <${resendFrom}>`,
             to: [to],
             subject,
             html,

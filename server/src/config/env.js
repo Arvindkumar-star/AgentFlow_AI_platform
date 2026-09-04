@@ -25,4 +25,12 @@ module.exports = {
   LINKEDIN_CLIENT_SECRET: process.env.LINKEDIN_CLIENT_SECRET || '',
   LINKEDIN_REDIRECT_URI: process.env.LINKEDIN_REDIRECT_URI || 'http://localhost:5000/api/integrations/oauth/linkedin/callback',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:3000',
+  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+  RESEND_FROM: process.env.RESEND_FROM || '',
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: process.env.SMTP_PORT || '',
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  FROM_EMAIL: process.env.FROM_EMAIL || '',
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || '',
 };
