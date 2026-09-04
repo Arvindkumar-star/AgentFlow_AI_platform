@@ -1,3 +1,3 @@
-import MobileGuard from './MobileGuard';
+import MobileGuard from '../MobileGuard';
 export default MobileGuard;
 export { MobileGuard };
