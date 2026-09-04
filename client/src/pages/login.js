@@ -9,39 +9,18 @@ import ThemeToggle from '../components/ThemeToggle';
 export default function Login() {
   const router = useRouter();
   const { data: session } = useSession();
-  const { login, token } = useAuthStore();
+  const { login, token, user } = useAuthStore();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      router.replace('/dashboard');
-    } else if (session?.user) {
-      const googleUser = {
-        id: session.user.id || session.user.email || 'usr_google_operator',
-        _id: session.user.id || session.user.email || 'usr_google_operator',
-        name: session.user.name || 'Google Operator',
-        email: session.user.email || 'operator@agentflow.ai',
-        role: session.user.role || 'operator',
-      };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(
-          'agentflow-auth',
-          JSON.stringify({
-            state: {
-              token: session.user.token || `oauth_jwt_${Date.now()}`,
-              user: googleUser,
-              hydrated: true,
-            },
-            version: 0,
-          })
-        );
-      }
+    // If already authenticated with valid JWT token, redirect to dashboard
+    if (token && !token.startsWith('jwt_fallback_') && !token.startsWith('oauth_jwt_')) {
       router.replace('/dashboard');
     }
-  }, [token, session, router]);
+  }, [token, router]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -61,6 +40,19 @@ export default function Login() {
     setGoogleBusy(true);
     setError('');
 
+    const hasRealGoogleCreds =
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== 'demo_client_id';
+
+    if (hasRealGoogleCreds) {
+      try {
+        await signIn('google', { callbackUrl: '/dashboard' });
+        return;
+      } catch (err) {
+        console.warn('NextAuth Google Sign-In redirect failed, falling back to direct API auth:', err);
+      }
+    }
+
     try {
       await useAuthStore.getState().googleLogin({
         name: 'Google Operator',
@@ -68,20 +60,7 @@ export default function Login() {
       });
       router.push('/dashboard');
     } catch (err) {
-      // Fallback dev token if backend unreachable
-      const googleUser = {
-        id: `usr_google_${Date.now().toString().slice(-6)}`,
-        _id: `usr_google_${Date.now().toString().slice(-6)}`,
-        name: 'Google Operator',
-        email: form.email || 'operator@agentflow.ai',
-        role: 'operator',
-      };
-      useAuthStore.setState({
-        token: `jwt_fallback_${Date.now()}`,
-        user: googleUser,
-        hydrated: true,
-      });
-      router.push('/dashboard');
+      setError(err.response?.data?.message || 'Unable to authenticate with Google server. Please try again.');
     } finally {
       setGoogleBusy(false);
     }

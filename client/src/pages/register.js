@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signIn } from 'next-auth/react';
@@ -7,11 +7,17 @@ import { useAuthStore } from '../store/authStore';
 
 export default function Register() {
   const router = useRouter();
-  const { register } = useAuthStore();
+  const { register, token } = useAuthStore();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+
+  useEffect(() => {
+    if (token && !token.startsWith('jwt_fallback_') && !token.startsWith('oauth_jwt_')) {
+      router.replace('/dashboard');
+    }
+  }, [token, router]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -35,6 +41,19 @@ export default function Register() {
     setGoogleBusy(true);
     setError('');
 
+    const hasRealGoogleCreds =
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== 'demo_client_id';
+
+    if (hasRealGoogleCreds) {
+      try {
+        await signIn('google', { callbackUrl: '/dashboard' });
+        return;
+      } catch (err) {
+        console.warn('NextAuth Google Sign-Up redirect failed, falling back to direct API auth:', err);
+      }
+    }
+
     try {
       await useAuthStore.getState().googleLogin({
         name: form.name || 'Google Operator',
@@ -42,20 +61,7 @@ export default function Register() {
       });
       router.push('/dashboard');
     } catch (err) {
-      // Fallback dev token if backend unreachable
-      const googleUser = {
-        id: `usr_google_${Date.now().toString().slice(-6)}`,
-        _id: `usr_google_${Date.now().toString().slice(-6)}`,
-        name: form.name || 'Google Operator',
-        email: form.email || 'operator@agentflow.ai',
-        role: 'operator',
-      };
-      useAuthStore.setState({
-        token: `jwt_fallback_${Date.now()}`,
-        user: googleUser,
-        hydrated: true,
-      });
-      router.push('/dashboard');
+      setError(err.response?.data?.message || 'Unable to authenticate with Google server. Please try again.');
     } finally {
       setGoogleBusy(false);
     }

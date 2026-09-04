@@ -24,6 +24,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const attackRoutes = require('./routes/attackRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // ─── Socket.IO ────────────────────────────────────────────────
