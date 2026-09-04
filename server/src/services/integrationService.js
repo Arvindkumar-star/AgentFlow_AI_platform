@@ -94,11 +94,14 @@ async function deleteBYOKCredential(userId, provider) {
 // ─── Get Decrypted Credentials for Execution ──────────────────
 async function getDecryptedCredentials(userId, provider) {
   let record = null;
-  if (userId) {
-    record = await Integration.findOne({ owner: userId, provider, isConnected: true });
-  }
-  if (!record) {
-    record = await Integration.findOne({ provider, isConnected: true });
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    if (userId) {
+      record = await Integration.findOne({ owner: userId, provider, isConnected: true });
+    }
+    if (!record) {
+      record = await Integration.findOne({ provider, isConnected: true });
+    }
   }
 
   // 1. If BYOK Custom Credentials Exist

@@ -166,6 +166,9 @@ class EmailService {
           secure: port === 465,
           auth: { user, pass },
           tls: { rejectUnauthorized: false },
+          connectionTimeout: 3000,
+          greetingTimeout: 3000,
+          socketTimeout: 3000,
         });
         return this._transporter;
       } catch (err) {

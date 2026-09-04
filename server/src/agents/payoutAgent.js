@@ -93,56 +93,59 @@ async function processPayoutNode(node, executionContext = {}) {
     autoEmail: true,
   });
 
-  // Register pending transaction in MongoDB
+  // Register pending transaction in MongoDB (if connected)
   try {
-    const Payout = require('../models/Payout');
-    const Notification = require('../models/Notification');
-    const { emitAgentEvent, getIO } = require('../config/socket');
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      const Payout = require('../models/Payout');
+      const Notification = require('../models/Notification');
+      const { emitAgentEvent, getIO } = require('../config/socket');
 
-    await Payout.create({
-      payoutId: payoutDraft.id,
-      amount: payoutDraft.amount / 100,
-      vendor: payoutDraft.vendor_name,
-      accountNumber: node.data?.accountNumber || '11214311215411',
-      status: 'PENDING_APPROVAL',
-      executionId: executionContext.executionId,
-      workflowId: executionContext.workflowId,
-      nodeId: node.id,
-      userId: executionContext.userId,
-      notes: {
-        paymentLink: paymentLinkResult.short_url,
-        emailDispatched: paymentLinkResult.emailDispatch?.dispatched || false,
-      },
-    });
-
-    if (executionContext.userId) {
-      await Notification.create({
-        owner: executionContext.userId,
-        type: 'warning',
-        title: 'Payout Approval Required',
-        message: `Draft payout of ₹${payoutDraft.amount / 100} for ${payoutDraft.vendor_name} requires your approval. Payment link: ${paymentLinkResult.short_url}`,
-        executionId: executionContext.executionId,
-        workflowId: executionContext.workflowId,
-      });
-    }
-
-    try {
-      const payload = {
-        type: 'payout_pending',
+      await Payout.create({
         payoutId: payoutDraft.id,
         amount: payoutDraft.amount / 100,
         vendor: payoutDraft.vendor_name,
-        paymentLink: paymentLinkResult.short_url,
-        emailDispatch: paymentLinkResult.emailDispatch,
+        accountNumber: node.data?.accountNumber || '11214311215411',
+        status: 'PENDING_APPROVAL',
+        executionId: executionContext.executionId,
+        workflowId: executionContext.workflowId,
         nodeId: node.id,
-      };
-      emitAgentEvent(executionContext.executionId, payload);
-      const io = getIO();
-      if (io) {
-        io.emit('payout_pending', payload);
-        io.emit('payment_link_generated', payload);
+        userId: executionContext.userId,
+        notes: {
+          paymentLink: paymentLinkResult.short_url,
+          emailDispatched: paymentLinkResult.emailDispatch?.dispatched || false,
+        },
+      });
+
+      if (executionContext.userId) {
+        await Notification.create({
+          owner: executionContext.userId,
+          type: 'warning',
+          title: 'Payout Approval Required',
+          message: `Draft payout of ₹${payoutDraft.amount / 100} for ${payoutDraft.vendor_name} requires your approval. Payment link: ${paymentLinkResult.short_url}`,
+          executionId: executionContext.executionId,
+          workflowId: executionContext.workflowId,
+        });
       }
-    } catch (_) {}
+
+      try {
+        const payload = {
+          type: 'payout_pending',
+          payoutId: payoutDraft.id,
+          amount: payoutDraft.amount / 100,
+          vendor: payoutDraft.vendor_name,
+          paymentLink: paymentLinkResult.short_url,
+          emailDispatch: paymentLinkResult.emailDispatch,
+          nodeId: node.id,
+        };
+        emitAgentEvent(executionContext.executionId, payload);
+        const io = getIO();
+        if (io) {
+          io.emit('payout_pending', payload);
+          io.emit('payment_link_generated', payload);
+        }
+      } catch (_) {}
+    }
   } catch (err) {
     console.warn('Could not persist pending payout record:', err.message);
   }
