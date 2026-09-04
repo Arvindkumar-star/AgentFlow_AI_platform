@@ -35,3 +35,6 @@ Thumbs.db
 # Testing & Coverage
 coverage/
 .nyc_output/
+
+# Local Demo Scripts
+script.md
