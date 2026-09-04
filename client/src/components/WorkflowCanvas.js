@@ -919,13 +919,18 @@ export default function WorkflowCanvas({
 
 
   const styledEdges = useMemo(
-    () => edges.map((e) => ({
-      ...e,
-      animated: true,
-      type: e.type || 'animatedGlow',
-      markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed, color: '#38bdf8', width: 18, height: 18 },
-      style: e.style || { stroke: '#38bdf8', strokeWidth: 2 },
-    })),
+    () => edges.map((e) => {
+      const rawLabel = e.label || e.data?.label;
+      const cleanLabel = (rawLabel && !String(rawLabel).startsWith('xy-edge') && rawLabel !== e.id) ? rawLabel : undefined;
+      return {
+        ...e,
+        label: cleanLabel,
+        animated: true,
+        type: e.type || 'animatedGlow',
+        markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed, color: '#38bdf8', width: 18, height: 18 },
+        style: e.style || { stroke: '#38bdf8', strokeWidth: 2 },
+      };
+    }),
     [edges]
   );
 

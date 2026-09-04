@@ -58,14 +58,15 @@ export function serializeWorkflowPayload(nodes = [], edges = []) {
   });
 
   const serializedEdges = (edges || []).map((edge) => {
-    const fallbackLabel = edge.label || edge.data?.label || edge.id || 'Connection';
+    const rawLabel = edge.label || edge.data?.label;
+    const cleanLabel = (rawLabel && !String(rawLabel).startsWith('xy-edge') && rawLabel !== edge.id) ? rawLabel : undefined;
     return {
       ...edge,
       id: String(edge.id),
       source: String(edge.source),
       target: String(edge.target),
       type: edge.type || 'animatedGlow',
-      label: fallbackLabel,
+      label: cleanLabel,
       animated: edge.animated !== undefined ? edge.animated : true,
     };
   });
