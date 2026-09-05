@@ -313,7 +313,7 @@ export default function ProofInspectorDrawer({ isOpen, onClose, proofData, onUpd
             <div className="flex items-center gap-2">
               {isWithinBudget ? <ShieldCheck className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
               <span className="font-semibold">
-                {isWithinBudget ? 'Constraint Satisfied' : `Limit Breached (+₹${breachDeltaINR.toLocaleString()})`}
+                {isWithinBudget ? 'Constraint Satisfied' : `Limit Breached (+₹${(Number(breachDeltaINR) || 0).toLocaleString('en-IN')})`}
               </span>
             </div>
             <span className="font-bold px-2 py-0.5 rounded bg-slate-900 border border-current">
@@ -374,27 +374,27 @@ export default function ProofInspectorDrawer({ isOpen, onClose, proofData, onUpd
               <div className="flex justify-between items-center font-mono">
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Requested Spend:</span>
                 <span className="text-sm font-bold" style={{ color: isValid ? '#10b981' : '#f43f5e' }}>
-                  ₹{requestedAmount.toLocaleString()}
+                  ₹{(Number(requestedAmount) || 0).toLocaleString('en-IN')}
                 </span>
               </div>
 
               <div className="flex justify-between items-center font-mono">
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Policy Ceiling (Limit):</span>
                 <span className="text-sm font-bold text-slate-200">
-                  ₹{maxLimit.toLocaleString()}
+                  ₹{(Number(maxLimit) || 0).toLocaleString('en-IN')}
                 </span>
               </div>
 
               <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
                 <div 
                   className={`h-full ${isValid ? 'bg-cyan-400' : 'bg-rose-500 animate-pulse'}`}
-                  style={{ width: `${Math.min(100, Math.round((requestedAmount / (maxLimit || 1)) * 100))}%` }}
+                  style={{ width: `${Math.min(100, Math.round(((Number(requestedAmount) || 0) / (Number(maxLimit) || 1)) * 100))}%` }}
                 />
               </div>
 
               <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 pt-1">
                 <span>Verification Time: ~{executionTime} ms</span>
-                <span>Safety Buffer: {isValid ? `₹${(maxLimit - requestedAmount).toLocaleString()}` : `OVER BY ₹${breachDeltaINR.toLocaleString()}`}</span>
+                <span>Safety Buffer: {isValid ? `₹${Math.max(0, (Number(maxLimit) || 0) - (Number(requestedAmount) || 0)).toLocaleString('en-IN')}` : `OVER BY ₹${(Number(breachDeltaINR) || 0).toLocaleString('en-IN')}`}</span>
               </div>
             </div>
           )}

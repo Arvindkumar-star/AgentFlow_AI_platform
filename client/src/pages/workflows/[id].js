@@ -312,7 +312,7 @@ function EditorInner({ id }) {
         nodes: cleanedNodes,
         edges: cleanedEdges,
         isVerified: !isPolicyViolation,
-        errorMessage: isPolicyViolation ? `Requested ₹${effectiveAmount.toLocaleString()} exceeds policy ceiling ₹${effectiveMaxLimit.toLocaleString()}` : null,
+        errorMessage: isPolicyViolation ? `Requested ₹${Number(effectiveAmount || 0).toLocaleString('en-IN')} exceeds policy ceiling ₹${Number(effectiveMaxLimit || 0).toLocaleString('en-IN')}` : null,
       });
 
       // Find the target downstream Razorpay node (if any)
@@ -351,7 +351,7 @@ function EditorInner({ id }) {
               requestedAmount: effectiveAmount,
               maxLimit: effectiveMaxLimit,
               breachDeltaINR: effectiveAmount - effectiveMaxLimit,
-              errorMessage: `Requested ₹${effectiveAmount.toLocaleString()} exceeds policy ceiling ₹${effectiveMaxLimit.toLocaleString()}`,
+              errorMessage: `Requested ₹${Number(effectiveAmount || 0).toLocaleString('en-IN')} exceeds policy ceiling ₹${Number(effectiveMaxLimit || 0).toLocaleString('en-IN')}`,
             }
           }));
         }

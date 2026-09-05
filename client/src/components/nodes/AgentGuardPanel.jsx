@@ -278,7 +278,7 @@ export default function AgentGuardPanel({ node, onSave }) {
                   Policy Ceiling (Max Limit)
                 </label>
                 <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', fontWeight: 700, color: '#22d3ee' }}>
-                  ₹{Number(maxLimit).toLocaleString()}
+                  ₹{Number(maxLimit || 0).toLocaleString('en-IN')}
                 </span>
               </div>
               <input
@@ -333,7 +333,7 @@ export default function AgentGuardPanel({ node, onSave }) {
                   fontWeight: 700, 
                   color: isWithinBudget ? '#10b981' : '#f43f5e' 
                 }}>
-                  ₹{Number(requestedAmount).toLocaleString()}
+                  ₹{Number(requestedAmount || 0).toLocaleString('en-IN')}
                 </span>
               </div>
               <input
@@ -428,7 +428,7 @@ export default function AgentGuardPanel({ node, onSave }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 {isPassing ? <ShieldCheck size={14} /> : <AlertTriangle size={14} />}
                 <span style={{ fontWeight: 600 }}>
-                  {isPassing ? 'Constraint Satisfied' : `Policy Violation: +₹${breachDelta.toLocaleString()}`}
+                  {isPassing ? 'Constraint Satisfied' : `Policy Violation: +₹${Number(breachDelta || 0).toLocaleString('en-IN')}`}
                 </span>
               </div>
               <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.68rem' }}>

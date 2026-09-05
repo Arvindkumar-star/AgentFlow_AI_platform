@@ -421,8 +421,8 @@ export default function FastPayoutsPage() {
                 </p>
                 {errorBanner.details && (
                   <div className="mt-2.5 pt-2 border-t border-red-500/20 text-[11px] font-mono flex flex-wrap gap-4 text-slate-400">
-                    <span>Requested: ₹{errorBanner.details.requestedAmount?.toLocaleString()}</span>
-                    <span>Authorized Cap: ₹{errorBanner.details.maxLimit?.toLocaleString()}</span>
+                    <span>Requested: ₹{Number(errorBanner.details.requestedAmount || 0).toLocaleString('en-IN')}</span>
+                    <span>Authorized Cap: ₹{Number(errorBanner.details.maxLimit || 0).toLocaleString('en-IN')}</span>
                     <span className="text-red-400 font-bold">Circuit Status: REJECTED</span>
                   </div>
                 )}
@@ -900,7 +900,7 @@ export default function FastPayoutsPage() {
                           </td>
                           <td className="py-3 px-3">
                             <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
-                              ₹{Number(p.amount || 0).toLocaleString()}
+                              ₹{Number(p.amount || 0).toLocaleString('en-IN')}
                             </span>
                           </td>
                           <td className="py-3 px-3 text-[11px]" style={{ color: 'var(--text-muted)' }}>
