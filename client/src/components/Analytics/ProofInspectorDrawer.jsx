@@ -63,11 +63,11 @@ export default function ProofInspectorDrawer({ isOpen, onClose, proofData, onUpd
     ? 'GROTH16_VERIFIED' 
     : 'CONSTRAINT_VIOLATION';
 
-  const requestedAmount = editRequestedAmount;
-  const maxLimit = editMaxLimit;
-  const vendor = nodeData.vendor || nodeData.label || 'Direct Vendor Payout';
-  const executionTime = proofData?.executionTime || proofData?.verificationTimeMs || nodeData?.executionTime || '38.4';
-  const breachDeltaINR = !isWithinBudget ? requestedAmount - maxLimit : 0;
+  const requestedAmount = Number(editRequestedAmount || 0);
+  const maxLimit = Number(editMaxLimit || 0);
+  const vendor = String(nodeData.vendor || nodeData.label || 'Direct Vendor Payout');
+  const executionTime = String(proofData?.executionTime || proofData?.verificationTimeMs || nodeData?.executionTime || '38.4');
+  const breachDeltaINR = !isWithinBudget ? Math.max(0, requestedAmount - maxLimit) : 0;
   const errorMessage = proofData?.errorMessage || nodeData?.errorMessage;
 
   const handleApplyChanges = () => {

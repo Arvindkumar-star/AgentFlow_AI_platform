@@ -2,16 +2,16 @@ import React from 'react';
 import { ShieldCheck, ShieldAlert, DollarSign, Activity, FileText, Lock, Zap } from 'lucide-react';
 
 export default function RiskMetricsCard({ metrics }) {
-  const totalInvoices = metrics?.totalAuditedInvoices || 42;
-  const capitalProtected = metrics?.totalCapitalProtectedINR || 385000;
-  const blockedScam = metrics?.blockedScamCapitalINR || 85000;
-  const successRate = metrics?.zkSuccessRatePercentage || 97.6;
-  const avgLatency = metrics?.averageVerificationTimeMs || 41.2;
+  const totalInvoices = Number(metrics?.totalAuditedInvoices ?? 42);
+  const capitalProtected = Number(metrics?.totalCapitalProtectedINR ?? 385000);
+  const blockedScam = Number(metrics?.blockedScamCapitalINR ?? 85000);
+  const successRate = Number(metrics?.zkSuccessRatePercentage ?? 97.6);
+  const avgLatency = Number(metrics?.averageVerificationTimeMs ?? 41.2);
 
   const cards = [
     {
       title: 'Invoices Audited',
-      value: totalInvoices.toLocaleString(),
+      value: totalInvoices.toLocaleString('en-IN'),
       subtitle: 'Pre-flight verified',
       icon: FileText,
       color: 'text-blue-400',
@@ -20,7 +20,7 @@ export default function RiskMetricsCard({ metrics }) {
     },
     {
       title: 'Capital Protected',
-      value: `₹${capitalProtected.toLocaleString()}`,
+      value: `₹${capitalProtected.toLocaleString('en-IN')}`,
       subtitle: 'Zero-knowledge bounded',
       icon: DollarSign,
       color: 'text-emerald-400',
@@ -29,7 +29,7 @@ export default function RiskMetricsCard({ metrics }) {
     },
     {
       title: 'Scam Volume Blocked',
-      value: `₹${blockedScam.toLocaleString()}`,
+      value: `₹${blockedScam.toLocaleString('en-IN')}`,
       subtitle: 'Ceiling breach intercepted',
       icon: ShieldAlert,
       color: 'text-rose-400',

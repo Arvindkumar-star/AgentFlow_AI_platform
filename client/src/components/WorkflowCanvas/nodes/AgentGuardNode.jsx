@@ -195,7 +195,7 @@ export default function AgentGuardNode({ data, selected, id }) {
               ) : isPromptInjection ? (
                 <span style={{ color: '#fb7185' }}>LLM-GUARD-101: System Prompt Hijack Intercept</span>
               ) : (
-                <>Max: ₹{maxLimit.toLocaleString()} | Req: <span style={{ color: isAttacked ? '#f43f5e' : isPassing ? '#10b981' : undefined, fontWeight: isAttacked || isPassing ? 700 : undefined }}>₹{requestedAmount.toLocaleString()}</span></>
+                <>Max: ₹{(maxLimit || 0).toLocaleString('en-IN')} | Req: <span style={{ color: isAttacked ? '#f43f5e' : isPassing ? '#10b981' : undefined, fontWeight: isAttacked || isPassing ? 700 : undefined }}>₹{(requestedAmount || 0).toLocaleString('en-IN')}</span></>
               )}
             </div>
           </div>
@@ -253,7 +253,7 @@ export default function AgentGuardNode({ data, selected, id }) {
               textAlign: 'center',
             }}
           >
-            🚨 CEILING BREACH DELTA: +₹{breachDelta.toLocaleString()}
+            🚨 CEILING BREACH DELTA: +₹{(breachDelta || 0).toLocaleString('en-IN')}
           </div>
         )}
 
